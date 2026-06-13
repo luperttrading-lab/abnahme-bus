@@ -9,17 +9,18 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v3.4</title>
+<title>Abnahmeprotokoll Neufahrzeug v3.11</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
     --bg:#10141a; --card:#181e26; --card2:#1d242e; --line:#242d39;
-    --txt:#e8edf3; --dim:#8a94a3; --faint:#5b6573;
+    --txt:#e8edf3; --dim:#a7b1c0; --faint:#8b95a4;
     --ok:#3fb96a; --nok:#e5534b; --open:#d9a13b; --acc:#4da3ff;
     --okbg:rgba(63,185,106,.14); --nokbg:rgba(229,83,75,.14);
     --okfill:rgba(63,185,106,.24); --nokfill:rgba(229,83,75,.24);
     --bar:rgba(16,20,26,.93);
     --row1:#161c24; --row2:#1b212b; --sheet:#141a22; --headbar:#2c4a6b;
+    --field:#283341; --fieldbd:#3d4a5b; --label:#e8edf3; --placeholder:#737d8c;
     --shadow:none;
   }
   :root[data-theme="light"]{
@@ -27,22 +28,24 @@
     color-scheme: light;
     --bg:#fdfcfa; --card:#f6f4f0; --card2:#efece6; --line:#e2ddd4;
     --txt:#241f1a; --dim:#6a6258; --faint:#9c948a;
-    --ok:#2e8c50; --nok:#c4362e; --open:#b07c1e; --acc:#3f6fb0;
+    --ok:#2e8c50; --nok:#c4362e; --open:#b07c1e; --acc:#356098;
     --okbg:rgba(46,140,80,.12); --nokbg:rgba(196,54,46,.10);
     --okfill:rgba(46,140,80,.22); --nokfill:rgba(196,54,46,.18);
     --bar:rgba(253,252,250,.94);
     --row1:#ffffff; --row2:#f2f0ea; --sheet:#ffffff; --headbar:#4a7ab8;
+    --field:#efece6; --fieldbd:#e2ddd4; --label:#1c1711; --placeholder:#aba293;
     --shadow:none;
   }
   :root[data-theme="dark"]{
     color-scheme: dark;
     --bg:#10141a; --card:#181e26; --card2:#1d242e; --line:#242d39;
-    --txt:#e8edf3; --dim:#8a94a3; --faint:#5b6573;
+    --txt:#e8edf3; --dim:#a7b1c0; --faint:#8b95a4;
     --ok:#3fb96a; --nok:#e5534b; --open:#d9a13b; --acc:#4da3ff;
     --okbg:rgba(63,185,106,.14); --nokbg:rgba(229,83,75,.14);
     --okfill:rgba(63,185,106,.24); --nokfill:rgba(229,83,75,.24);
     --bar:rgba(16,20,26,.93);
     --row1:#161c24; --row2:#1b212b; --sheet:#141a22; --headbar:#2c4a6b;
+    --field:#283341; --fieldbd:#3d4a5b; --label:#e8edf3; --placeholder:#737d8c;
     --shadow:none;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -58,8 +61,14 @@
   #topbar{position:sticky; top:0; z-index:20; background:var(--bar);
     -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line); padding:10px 14px 0;}
-  #topbar h1{margin:0; font-size:15.5px; font-weight:700; letter-spacing:.2px;}
-  #topbar .sub{font-size:12px; color:var(--dim); margin-top:2px;
+  #topbar h1{margin:0; font-size:15.5px; font-weight:700; letter-spacing:.2px; padding-right:42px;}
+  #theme-toggle{position:absolute; top:16px; right:14px; width:28px; height:28px; padding:0;
+    border-radius:50%; border:1.5px solid var(--fieldbd); cursor:pointer;
+    background:linear-gradient(90deg, #ece5d6 0 50%, #1b2330 50% 100%);
+    box-shadow:0 1px 3px rgba(0,0,0,.18); transition:transform .35s ease;
+    -webkit-tap-highlight-color:transparent;}
+  html[data-theme="dark"] #theme-toggle{transform:rotate(180deg);}
+  #topbar .sub{font-size:12px; color:var(--dim); margin-top:9px;
     font-variant-numeric:tabular-nums; display:flex; justify-content:space-between;}
   #pbar{height:4px; border-radius:2px; background:var(--line); margin-top:7px; overflow:hidden; display:flex;}
   #pbar div{height:100%;}
@@ -71,7 +80,7 @@
     border:1px solid rgba(77,163,255,.35); color:var(--acc); font-weight:500;}
   #filters{display:flex; gap:7px; padding:9px 0 10px; overflow-x:auto;}
   #filters::-webkit-scrollbar{display:none;}
-  .chip{flex-shrink:0; border:1px solid var(--line); background:var(--card2); color:var(--dim);
+  .chip{flex-shrink:0; border:1px solid var(--line); background:var(--card2); color:var(--txt);
     border-radius:16px; padding:6px 13px; font-size:12.5px; font-weight:600; cursor:pointer;
     font-family:inherit; font-variant-numeric:tabular-nums;}
   .chip.act{border-color:var(--acc); color:var(--acc); background:rgba(77,163,255,.12);}
@@ -79,12 +88,16 @@
   /* ---------- Tabs ---------- */
   #tabs{position:fixed; bottom:0; left:0; right:0; z-index:30; display:flex;
     background:var(--bar); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
-    border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom);}
-  #tabs button{flex:1; background:none; border:none; color:var(--faint); font-size:11px;
-    font-weight:600; padding:8px 0 9px; cursor:pointer; display:flex; flex-direction:column;
-    align-items:center; gap:3px; font-family:inherit;}
+    border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom);
+    transform:translateZ(0); will-change:transform; -webkit-transform:translateZ(0);}
+  #tabs button{flex:1; position:relative; isolation:isolate; background:none; border:none;
+    color:var(--dim); font-size:11px; font-weight:600; padding:9px 0 10px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px; font-family:inherit;
+    transition:color .15s ease;}
   #tabs button .ic{font-size:19px; line-height:1;}
   #tabs button.act{color:var(--acc);}
+  #tabs button.act::before{content:''; position:absolute; inset:5px 8px; z-index:-1;
+    border-radius:10px; background:rgba(77,163,255,.12); border:1px solid var(--acc);}
   .page{display:none; padding:12px 12px 24px;}
   #pg-check{padding-top:0;}
   .page.act{display:block;}
@@ -110,7 +123,7 @@
   .it.s-nok{box-shadow:inset 4px 0 0 var(--nok); background:var(--nokbg);}
   .theme-seg{display:flex; gap:8px;}
   .theme-btn{flex:1; height:42px; border-radius:10px; border:1px solid var(--line);
-    background:var(--card2); color:var(--dim); font-size:14px; font-weight:700;
+    background:var(--card2); color:var(--txt); font-size:14px; font-weight:700;
     font-family:inherit; cursor:pointer;}
   .theme-btn.act{border-color:var(--acc); color:var(--acc); background:rgba(77,163,255,.12);}
   .it-row{display:flex; align-items:center; gap:10px;}
@@ -140,7 +153,7 @@
   .nok-detail textarea{width:100%; background:var(--card2); border:1px solid rgba(229,83,75,.45);
     border-radius:9px; color:var(--txt); font-family:inherit; font-size:16px;
     padding:8px 10px; min-height:42px; resize:vertical;}
-  .nok-detail textarea::placeholder{color:var(--faint); font-size:14px;}
+  .nok-detail textarea::placeholder{color:var(--placeholder); font-size:14px; opacity:1;}
   .nok-row{display:flex; align-items:center; gap:10px; margin-top:8px;}
   .sofort{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--dim);
     cursor:pointer; user-select:none; -webkit-user-select:none; flex:1;}
@@ -202,20 +215,22 @@
   /* ---------- Kopfdaten ---------- */
   .fcard{background:var(--card); border:1px solid var(--line); border-radius:14px;
     padding:14px; margin-bottom:10px;}
-  .fcard h2{margin:0 0 10px; font-size:13px; font-weight:700; color:var(--dim);
+  .fcard h2{margin:0 0 10px; font-size:13px; font-weight:700; color:var(--label);
     text-transform:uppercase; letter-spacing:.6px;}
   .fld{margin-bottom:10px;}
   .fld:last-child{margin-bottom:0;}
-  .fld label{display:block; font-size:11.5px; color:var(--dim); margin-bottom:4px; font-weight:600;}
-  .fld input{width:100%; background:var(--card2); border:1px solid var(--line); border-radius:9px;
+  .fld label{display:block; font-size:11.5px; color:var(--label); margin-bottom:4px; font-weight:600;}
+  .fld input{width:100%; background:var(--field); border:1px solid var(--fieldbd); border-radius:9px;
     color:var(--txt); font-family:inherit; font-size:16px; padding:9px 11px;}
   .fld input:focus{outline:none; border-color:var(--acc);}
+  .fld input::placeholder{color:var(--placeholder); opacity:1;}
   .btn{display:block; width:100%; padding:12px; border-radius:11px; border:1px solid var(--line);
     background:var(--card2); color:var(--txt); font-family:inherit; font-size:14px;
     font-weight:600; cursor:pointer; text-align:center;}
   .btn.danger{color:var(--nok); border-color:rgba(229,83,75,.4);}
   .btn.primary{background:rgba(77,163,255,.16); border-color:var(--acc); color:var(--acc);}
   .btn + .btn{margin-top:8px;}
+  .btn-sep{height:1px; background:var(--line); margin:16px 2px 14px;}
   .hint{font-size:11.5px; color:var(--faint); line-height:1.5; margin:10px 4px 0;}
 
   /* ---------- Auswertung ---------- */
@@ -259,6 +274,10 @@
     box-shadow:0 14px 44px rgba(0,0,0,.35);}
   #ask-msg{font-size:14.5px; line-height:1.45; white-space:pre-line; margin-bottom:16px;}
   #ask-btns{display:flex; gap:10px; justify-content:flex-end;}
+  #ask-btns.stack{flex-direction:column; align-items:stretch;}
+  #ask-btns.stack #ask-yes{order:1;}
+  #ask-btns.stack #ask-alt{order:2;}
+  #ask-btns.stack #ask-no{order:3;}
   .ask-btn{min-height:44px; padding:0 16px; border-radius:10px; border:1px solid var(--line);
     font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;
     background:var(--card2); color:var(--dim);}
@@ -275,7 +294,8 @@
 <div id="bg-layer"></div>
 
 <div id="topbar">
-  <h1>Abnahmeprotokoll Neufahrzeug <span style="color:var(--faint);font-size:12px;font-weight:600">v3.4</span></h1>
+  <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v3.11</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -312,21 +332,19 @@
     <div class="fld"><label>Tachoprüfung</label><input id="m-tacho" placeholder="z. B. Kalibrierung 04/2026"></div>
   </div>
   <div class="fcard">
-    <h2>Sicherung &amp; Übertragung</h2>
-    <button class="btn primary" id="btn-export">Sicherung exportieren (.json)</button>
-    <button class="btn" id="btn-import">Sicherung importieren</button>
-    <button class="btn" id="btn-export-txt">Stand als Text kopieren (ohne Fotos)</button>
-    <button class="btn" id="btn-import-txt">Aus Text importieren</button>
+    <h2>Protokoll-Verwaltung</h2>
+    <button class="btn primary" id="btn-export">Protokoll sichern</button>
+    <button class="btn" id="btn-import">Anderes Protokoll laden</button>
+    <button class="btn" id="btn-new">Neues Protokoll starten</button>
     <input type="file" id="imp" accept=".json,application/json" style="display:none">
-    <p class="hint">Sichert kompletten Stand inkl. Fotos als Datei — als Backup oder zum Weiterarbeiten
-    auf einem anderen Gerät. Import ersetzt den aktuellen Stand. Die Text-Variante ist der Notausgang
-    für Umgebungen ohne Datei-Download (z. B. Vorschau): kopieren, in Notizen sichern, später einfügen.</p>
-  </div>
-  <div class="fcard">
-    <h2>Protokoll</h2>
-    <button class="btn danger" id="btn-reset">Protokoll zurücksetzen</button>
-    <p class="hint">Stand wird automatisch lokal im Browser gespeichert. Für die Abnahme vor Ort die
-    Datei in Safari geöffnet lassen; zur Sicherung den Bericht in der Auswertung teilen.</p>
+    <p class="hint"><b>Sichern</b> legt den kompletten Stand inkl. Fotos als Datei ab — als Backup
+    oder zum Weiterarbeiten auf einem anderen Gerät. <b>Laden</b> öffnet so eine Datei und ersetzt
+    den aktuellen Stand. <b>Neu starten</b> beginnt eine leere Abnahme (sichert vorher ab).</p>
+    <div class="btn-sep"></div>
+    <button class="btn danger" id="btn-reset">Aktuelles Protokoll löschen</button>
+    <p class="hint"><b>Löschen</b> entfernt Bewertungen, Beanstandungen, Fotos und Fahrzeugdaten
+    unwiderruflich — vorher ggf. „Protokoll sichern". Ohne Löschen bleibt der Stand automatisch
+    lokal auf diesem Gerät erhalten.</p>
   </div>
 </div>
 
@@ -376,6 +394,7 @@
     <div id="ask-msg"></div>
     <div id="ask-btns">
       <button id="ask-no" class="ask-btn ask-cancel">Abbrechen</button>
+      <button id="ask-alt" class="ask-btn ask-cancel" style="display:none"></button>
       <button id="ask-yes" class="ask-btn ask-ok">OK</button>
     </div>
   </div>
@@ -855,18 +874,18 @@ function updateStorageWarn(){
   if(!canLS || !canIDB){
     el.style.display='block'; el.className='warn-hard';
     if(!canLS && !canIDB){
-      el.textContent = '⚠ Kein dauerhafter Speicher in dieser Umgebung — Stand geht beim Schließen verloren. App über eine echte Webadresse (https) öffnen, oder Daten → „Stand als Text kopieren" sichern!';
+      el.textContent = '⚠ Kein dauerhafter Speicher in dieser Umgebung — Stand geht beim Schließen verloren. App über eine echte Webadresse (https) öffnen, oder mit „Protokoll sichern" eine Sicherung erstellen!';
     } else if(!canIDB){
       el.textContent = '⚠ Fotos werden hier nicht dauerhaft gespeichert (nur bis zum Schließen). Bewertungen bleiben erhalten.';
     } else {
-      el.textContent = '⚠ Bewertungen werden hier nicht dauerhaft gespeichert. Vor dem Schließen: Daten → „Stand als Text kopieren"!';
+      el.textContent = '⚠ Bewertungen werden hier nicht dauerhaft gespeichert. Vor dem Schließen: „Protokoll sichern"!';
     }
     return;
   }
   // Speicher ok, aber kein Datei-Teilen: nur dezenter Hinweis (kein Alarm)
   if(!canShare){
     el.style.display='block'; el.className='warn-soft';
-    el.textContent = 'ℹ Export/PDF lassen sich hier evtl. nicht direkt teilen. Falls ein Button nichts tut: Daten → „Stand als Text kopieren" nutzen.';
+    el.textContent = 'ℹ Export/PDF lassen sich hier evtl. nicht direkt teilen. „Protokoll sichern" zeigt dann die Sicherung als kopierbaren Text.';
     return;
   }
   el.style.display='none';
@@ -1218,31 +1237,39 @@ function bindMeta(){
     var el=$('#m-'+k); el.value=state.meta[k]||'';
     el.addEventListener('input', function(){ state.meta[k]=el.value; persist(); });
   });
-  $('#btn-export').addEventListener('click', exportBackup);
+  $('#btn-export').addEventListener('click', function(){ exportBackup(); });
   $('#btn-import').addEventListener('click', function(){ var i=$('#imp'); i.value=''; i.click(); });
   $('#imp').addEventListener('change', function(){ if(this.files && this.files[0]) importBackup(this.files[0]); });
-  $('#btn-export-txt').addEventListener('click', function(){ txtOverlay('export', backupText()); });
-  $('#btn-import-txt').addEventListener('click', function(){ txtOverlay('import', ''); });
   $('#txt-close').addEventListener('click', function(){ $('#txt-overlay').classList.remove('act'); });
   $('#txt-backdrop').addEventListener('click', function(){ $('#txt-overlay').classList.remove('act'); });
   $('#txt-copy').addEventListener('click', function(){ copyText($('#txt-area').value); });
-  $('#txt-import').addEventListener('click', function(){
-    var data = parseBackup($('#txt-area').value);
-    if(!data){ uiAlert('Kein gültiger Sicherungstext.'); return; }
-    uiConfirm('Stand vom '+(data.ts? data.ts.slice(0,10):'?')+' laden?\nAktueller Stand wird ersetzt (Text-Sicherung enthält keine Fotos).', {yes:'Laden', danger:false}).then(function(ok){
-      if(!ok) return;
-      applyBackup(data).then(function(){
-        $('#txt-overlay').classList.remove('act');
-        uiAlert('Stand geladen.');
-      });
+
+  function doReset(){
+    store.clear(); fotoClear(); state=freshState();
+    META.forEach(function(k){ var el=$('#m-'+k); if(el) el.value=state.meta[k]||''; });
+    buildChecklist(); renderEval(); persist();
+  }
+
+  $('#btn-new').addEventListener('click', function(){
+    uiConfirm('Neues Protokoll für die nächste Abnahme beginnen?\n\nDas aktuelle Protokoll wird dabei geleert. Vorher sichern?',
+      {yes:'Erst sichern', alt:'Ohne Sichern starten', no:'Abbrechen', danger:false}).then(function(choice){
+      if(choice==='yes'){
+        exportBackup().then(function(res){
+          if(res==='shared'){ doReset(); uiAlert('Gesichert — neues Protokoll gestartet.'); }
+          /* 'cancelled' = Teilen abgebrochen → aktuelles Protokoll bleibt erhalten.
+             'text' = Sicherungstext wird gezeigt → erst kopieren, dann ggf. erneut „neu starten". */
+        });
+      } else if(choice==='alt'){
+        doReset(); uiAlert('Neues Protokoll gestartet.');
+      }
     });
   });
+
   $('#btn-reset').addEventListener('click', function(){
-    uiConfirm('Wirklich alle Bewertungen, Beanstandungen, Fotos und Fahrzeugdaten löschen?').then(function(ok){
+    uiConfirm('Aktuelles Protokoll wirklich löschen?\n\nAlle Bewertungen, Beanstandungen, Fotos und Fahrzeugdaten gehen unwiderruflich verloren.',
+      {yes:'Löschen', danger:true}).then(function(ok){
       if(!ok) return;
-      store.clear(); fotoClear(); state=freshState();
-      META.forEach(function(k){ $('#m-'+k).value=state.meta[k]||''; });
-      buildChecklist(); renderEval(); persist();
+      doReset();
     });
   });
 }
@@ -1278,7 +1305,7 @@ function renderEval(){
    + '</div></div>';
 
   if(s.done===0){
-    h+='<div class="verdict v-open"><b>Noch keine Prüfung erfasst</b>Im Tab „Protokoll" jeden Punkt mit OK oder NOK bewerten. F = Funktionsprüfung, S = Sichtprüfung.</div>';
+    h+='<div class="verdict v-open"><b>Noch keine Prüfung erfasst</b>Im Tab „Protokoll" jeden Punkt mit OK oder NOK bewerten.</div>';
   } else if(s.open>0){
     h+='<div class="verdict v-open"><b>Prüfung unvollständig — '+s.open+' Punkte offen</b>'
      + 'Vor Unterschrift alle Punkte bewerten (Filter „Offen" nutzen).'
@@ -1635,12 +1662,13 @@ function exportBackup(){
   var file;
   try{ file = new File([blob], fname, {type:'application/json'}); }catch(e){ file = null; }
   if(file && canShareFiles(file)){
-    navigator.share({files:[file], title:fname}).catch(function(){});
-    return;
+    return navigator.share({files:[file], title:fname})
+      .then(function(){ return 'shared'; }, function(){ return 'cancelled'; });
   }
   // Teilen/Download nicht möglich (Quick Look / eingebettet): vollständige Sicherung als kopierbarer Text
   txtOverlay('export', json);
   $('#txt-title').textContent = 'Vollständige Sicherung (inkl. Fotos) — kopieren & sichern';
+  return Promise.resolve('text');
 }
 function applyBackup(data){
   state.meta = data.meta || state.meta;
@@ -1667,7 +1695,7 @@ function importBackup(file){
   rd.onload = function(){
     var data = parseBackup(rd.result);
     if(!data){ uiAlert('Das ist keine gültige Sicherung dieser App.'); return; }
-    uiConfirm('Sicherung vom '+(data.ts? data.ts.slice(0,10):'?')+' laden?\nAktueller Stand und Fotos werden ersetzt.', {yes:'Laden', danger:false}).then(function(ok){
+    uiConfirm('Anderes Protokoll laden (Sicherung vom '+(data.ts? data.ts.slice(0,10):'?')+')?\n\nDas aktuelle Protokoll inkl. Fotos wird dabei überschrieben.', {yes:'Laden', danger:false}).then(function(ok){
       if(!ok) return;
       applyBackup(data).then(function(){ uiAlert('Sicherung geladen.'); });
     });
@@ -1726,25 +1754,31 @@ function uiModal(opts){
     var msg=document.getElementById('ask-msg');
     var yes=document.getElementById('ask-yes');
     var no=document.getElementById('ask-no');
+    var alt=document.getElementById('ask-alt');
+    var btns=document.getElementById('ask-btns');
+    var three = !!opts.alt;
     msg.textContent = opts.msg || '';
     yes.textContent = opts.yes || 'OK';
     yes.className = 'ask-btn ' + (opts.danger ? 'ask-danger' : 'ask-ok');
     if(opts.no){ no.textContent=opts.no; no.style.display=''; }
     else { no.style.display='none'; }
+    if(three){ alt.textContent=opts.alt; alt.style.display=''; btns.classList.add('stack'); }
+    else { alt.style.display='none'; btns.classList.remove('stack'); }
     ov.style.display='flex';
     function done(val){
       ov.style.display='none';
-      yes.onclick=null; no.onclick=null; ov.onclick=null;
+      yes.onclick=null; no.onclick=null; alt.onclick=null; ov.onclick=null;
       resolve(val);
     }
-    yes.onclick=function(){ done(true); };
-    no.onclick=function(){ done(false); };
-    ov.onclick=function(e){ if(e.target===ov) done(false); };
+    yes.onclick=function(){ done(three ? 'yes' : true); };
+    no.onclick=function(){ done(three ? 'cancel' : false); };
+    alt.onclick=function(){ done('alt'); };
+    ov.onclick=function(e){ if(e.target===ov) done(three ? 'cancel' : false); };
   });
 }
 function uiConfirm(msg, opts){
   opts=opts||{};
-  return uiModal({msg:msg, yes:opts.yes||'Löschen', no:opts.no||'Abbrechen', danger:opts.danger!==false});
+  return uiModal({msg:msg, yes:opts.yes||'Löschen', alt:opts.alt, no:opts.no||'Abbrechen', danger:opts.danger!==false});
 }
 function uiAlert(msg){ return uiModal({msg:msg, yes:'OK', no:null, danger:false}); }
 
@@ -1754,12 +1788,25 @@ function syncTopbarHeight(){
   if(!tb) return;
   document.documentElement.style.setProperty('--topbar-h', tb.offsetHeight+'px');
 }
+/* „offen N" rechtsbündig exakt unter dem Ende der Versionsnummer ausrichten */
+function alignStatusRight(){
+  var ver=document.getElementById('ver');
+  var sub=document.querySelector('#topbar .sub');
+  if(!ver||!sub) return;
+  var verRight=ver.getBoundingClientRect().right;
+  var subRight=sub.getBoundingClientRect().right;
+  var pad=subRight-verRight;
+  if(pad<0) pad=0;
+  sub.style.paddingRight=pad+'px';
+}
 function initStickyHead(){
   syncTopbarHeight();
-  window.addEventListener('resize', syncTopbarHeight);
-  window.addEventListener('orientationchange', function(){ setTimeout(syncTopbarHeight,150); });
+  alignStatusRight();
+  requestAnimationFrame(alignStatusRight);
+  window.addEventListener('resize', function(){ syncTopbarHeight(); alignStatusRight(); });
+  window.addEventListener('orientationchange', function(){ setTimeout(function(){ syncTopbarHeight(); alignStatusRight(); },150); });
   var tb=document.getElementById('topbar');
-  if(tb && window.ResizeObserver){ new ResizeObserver(syncTopbarHeight).observe(tb); }
+  if(tb && window.ResizeObserver){ new ResizeObserver(function(){ syncTopbarHeight(); alignStatusRight(); }).observe(tb); }
 }
 
 /* ============ Theme ============ */
@@ -1779,6 +1826,11 @@ function initTheme(){
   var bl=document.getElementById('th-light'), bd=document.getElementById('th-dark');
   if(bl) bl.addEventListener('click', function(){ applyTheme('light'); });
   if(bd) bd.addEventListener('click', function(){ applyTheme('dark'); });
+  var tg=document.getElementById('theme-toggle');
+  if(tg) tg.addEventListener('click', function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    applyTheme(cur==='dark' ? 'light' : 'dark');
+  });
 }
 
 /* ============ Boot ============ */
