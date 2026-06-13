@@ -3,28 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#10141a">
+  <meta name="theme-color" content="#fdfcfa">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v3.1</title>
+<title>Abnahmeprotokoll Neufahrzeug v3.4</title>
 <style>
   :root{
+    /* Dunkles Theme (Standard-Fallback) */
     --bg:#10141a; --card:#181e26; --card2:#1d242e; --line:#242d39;
     --txt:#e8edf3; --dim:#8a94a3; --faint:#5b6573;
     --ok:#3fb96a; --nok:#e5534b; --open:#d9a13b; --acc:#4da3ff;
     --okbg:rgba(63,185,106,.14); --nokbg:rgba(229,83,75,.14);
+    --okfill:rgba(63,185,106,.24); --nokfill:rgba(229,83,75,.24);
+    --bar:rgba(16,20,26,.93);
+    --row1:#161c24; --row2:#1b212b; --sheet:#141a22; --headbar:#2c4a6b;
+    --shadow:none;
+  }
+  :root[data-theme="light"]{
+    /* Helles Theme — Papier-Look, warmweiß wie echtes Formularpapier */
+    color-scheme: light;
+    --bg:#fdfcfa; --card:#f6f4f0; --card2:#efece6; --line:#e2ddd4;
+    --txt:#241f1a; --dim:#6a6258; --faint:#9c948a;
+    --ok:#2e8c50; --nok:#c4362e; --open:#b07c1e; --acc:#3f6fb0;
+    --okbg:rgba(46,140,80,.12); --nokbg:rgba(196,54,46,.10);
+    --okfill:rgba(46,140,80,.22); --nokfill:rgba(196,54,46,.18);
+    --bar:rgba(253,252,250,.94);
+    --row1:#ffffff; --row2:#f2f0ea; --sheet:#ffffff; --headbar:#4a7ab8;
+    --shadow:none;
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#10141a; --card:#181e26; --card2:#1d242e; --line:#242d39;
+    --txt:#e8edf3; --dim:#8a94a3; --faint:#5b6573;
+    --ok:#3fb96a; --nok:#e5534b; --open:#d9a13b; --acc:#4da3ff;
+    --okbg:rgba(63,185,106,.14); --nokbg:rgba(229,83,75,.14);
+    --okfill:rgba(63,185,106,.24); --nokfill:rgba(229,83,75,.24);
+    --bar:rgba(16,20,26,.93);
+    --row1:#161c24; --row2:#1b212b; --sheet:#141a22; --headbar:#2c4a6b;
+    --shadow:none;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{background:#fdfcfa;}
+  html[data-theme="dark"]{background:#10141a;}
+  #bg-layer{position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg); z-index:-1;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--txt);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     touch-action:manipulation; overscroll-behavior-y:none;}
   body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 
   /* ---------- Top bar ---------- */
-  #topbar{position:sticky; top:0; z-index:20; background:rgba(16,20,26,.93);
+  #topbar{position:sticky; top:0; z-index:20; background:var(--bar);
     -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line); padding:10px 14px 0;}
   #topbar h1{margin:0; font-size:15.5px; font-weight:700; letter-spacing:.2px;}
@@ -47,7 +78,7 @@
 
   /* ---------- Tabs ---------- */
   #tabs{position:fixed; bottom:0; left:0; right:0; z-index:30; display:flex;
-    background:rgba(20,25,33,.96); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    background:var(--bar); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
     border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom);}
   #tabs button{flex:1; background:none; border:none; color:var(--faint); font-size:11px;
     font-weight:600; padding:8px 0 9px; cursor:pointer; display:flex; flex-direction:column;
@@ -55,29 +86,58 @@
   #tabs button .ic{font-size:19px; line-height:1;}
   #tabs button.act{color:var(--acc);}
   .page{display:none; padding:12px 12px 24px;}
+  #pg-check{padding-top:0;}
   .page.act{display:block;}
 
   /* ---------- Prüfpunkte ---------- */
-  .it{background:var(--card); border:1px solid var(--line); border-radius:13px;
-    padding:11px 12px; margin-bottom:8px;}
+  .sheet{border:1px solid var(--line); border-top:none; border-radius:0 0 12px 12px;
+    background:var(--sheet);}
+  .sheet-sticky{position:sticky; top:var(--topbar-h, 0px); z-index:8;
+    border-radius:0; overflow:hidden;}
+  .sheet-head{display:flex; justify-content:space-between; align-items:center;
+    background:var(--headbar); color:#fff; font-size:10.5px; font-weight:700;
+    letter-spacing:.6px; text-transform:uppercase; padding:9px 13px;}
+  .sheet-legend{display:flex; gap:16px; align-items:center; flex-wrap:wrap;
+    background:var(--card2); color:var(--dim); font-size:12px; padding:8px 13px;
+    border-bottom:1px solid var(--line);}
+  .sheet-legend b{display:inline-block; min-width:18px; text-align:center;
+    color:var(--acc); font-weight:700; border:1px solid rgba(74,122,184,.45);
+    border-radius:5px; padding:1px 4px; margin-right:4px; font-size:11px;}
+  .it{background:var(--row1); padding:11px 13px;}
+  .it + .it{border-top:1px solid var(--line);}
+  .it:last-child{border-radius:0 0 11px 11px;}
+  .it.s-ok{box-shadow:inset 4px 0 0 var(--ok); background:var(--okbg);}
+  .it.s-nok{box-shadow:inset 4px 0 0 var(--nok); background:var(--nokbg);}
+  .theme-seg{display:flex; gap:8px;}
+  .theme-btn{flex:1; height:42px; border-radius:10px; border:1px solid var(--line);
+    background:var(--card2); color:var(--dim); font-size:14px; font-weight:700;
+    font-family:inherit; cursor:pointer;}
+  .theme-btn.act{border-color:var(--acc); color:var(--acc); background:rgba(77,163,255,.12);}
   .it-row{display:flex; align-items:center; gap:10px;}
-  .it-meta{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; width:44px;}
-  .it-code{font-size:11.5px; font-weight:700; color:var(--faint); font-variant-numeric:tabular-nums;}
-  .fs{font-size:10px; font-weight:700; color:var(--acc); border:1px solid rgba(77,163,255,.45);
-    border-radius:5px; padding:1px 5px; letter-spacing:.4px; white-space:nowrap;}
+  .it-meta{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:5px; width:52px;}
+  .it-code{font-size:12.5px; font-weight:700; color:var(--faint); font-variant-numeric:tabular-nums;}
+  .fs{font-size:11.5px; font-weight:700; color:var(--acc); border:1px solid rgba(74,122,184,.45);
+    border-radius:6px; padding:2px 7px; letter-spacing:.5px; white-space:nowrap;}
   .it-txt{flex:1; font-size:13.5px; line-height:1.35; min-width:0;
     overflow-wrap:break-word; word-break:break-word; -webkit-hyphens:auto; hyphens:auto;}
   .it.s-ok .it-txt{color:var(--dim);}
   .seg{display:flex; gap:6px; flex-shrink:0;}
   .seg button{min-width:48px; height:38px; border-radius:10px; border:1px solid var(--line);
-    background:var(--card2); color:var(--faint); font-size:12.5px; font-weight:800;
+    background:var(--card2); color:var(--dim); font-size:12.5px; font-weight:800;
     cursor:pointer; font-family:inherit; padding:0 10px; letter-spacing:.3px;}
-  .it.s-ok  .seg .b-ok {background:var(--okbg);  border-color:var(--ok);  color:var(--ok);}
-  .it.s-nok .seg .b-nok{background:var(--nokbg); border-color:var(--nok); color:var(--nok);}
+  .seg .b-ok{color:var(--ok); border-color:rgba(46,140,80,.40);}
+  .seg .b-nok{color:var(--nok); border-color:rgba(196,54,46,.40);}
+  .it.s-ok  .seg .b-ok {background:var(--okfill);  border-color:var(--ok);  color:var(--ok);}
+  .it.s-nok .seg .b-nok{background:var(--nokfill); border-color:var(--nok); color:var(--nok);}
+  .it.s-ok  .seg .b-nok,.it.s-nok .seg .b-ok{color:var(--faint); border-color:var(--line);}
 
   .nok-detail{display:none; margin-top:10px; border-top:1px dashed rgba(229,83,75,.35); padding-top:10px;}
   .it.s-nok .nok-detail{display:block;}
-  .nok-detail textarea{width:100%; background:#141a22; border:1px solid rgba(229,83,75,.45);
+  .it.s-nok.collapsed .nok-detail{display:none;}
+  .it.s-nok .it-row{cursor:pointer;}
+  .it.s-nok .it-txt::after{content:' ▲'; color:var(--nok); font-weight:700; font-size:17px; vertical-align:-1px;}
+  .it.s-nok.collapsed .it-txt::after{content:' ▼';}
+  .nok-detail textarea{width:100%; background:var(--card2); border:1px solid rgba(229,83,75,.45);
     border-radius:9px; color:var(--txt); font-family:inherit; font-size:16px;
     padding:8px 10px; min-height:42px; resize:vertical;}
   .nok-detail textarea::placeholder{color:var(--faint); font-size:14px;}
@@ -88,7 +148,7 @@
     background:var(--card2); display:flex; align-items:center; justify-content:center;
     font-size:14px; font-weight:800; color:transparent; flex-shrink:0;}
   .sofort.on .cb{background:var(--okbg); border-color:var(--ok); color:var(--ok);}
-  .nok-row input[type=date]{background:#141a22; border:1px solid var(--line); border-radius:8px;
+  .nok-row input[type=date]{background:var(--card2); border:1px solid var(--line); border-radius:8px;
     color:var(--txt); font-family:inherit; font-size:16px; padding:6px 8px; width:150px;}
   /* ---------- Fotos ---------- */
   .fotos{display:flex; gap:8px; margin-top:9px; flex-wrap:wrap;}
@@ -134,7 +194,7 @@
     bottom:calc(10px + env(safe-area-inset-bottom));
     background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px;
     display:flex; flex-direction:column; gap:8px;}
-  #txt-area{flex:1; min-height:0; background:#141a22; border:1px solid var(--line);
+  #txt-area{flex:1; min-height:0; background:var(--card2); border:1px solid var(--line);
     border-radius:10px; color:var(--txt); font-family:ui-monospace,Menlo,monospace;
     font-size:11px; padding:9px; resize:none; -webkit-user-select:text; user-select:text;}
   .empty-filter{color:var(--faint); font-size:13.5px; text-align:center; padding:28px 8px;}
@@ -147,7 +207,7 @@
   .fld{margin-bottom:10px;}
   .fld:last-child{margin-bottom:0;}
   .fld label{display:block; font-size:11.5px; color:var(--dim); margin-bottom:4px; font-weight:600;}
-  .fld input{width:100%; background:#141a22; border:1px solid var(--line); border-radius:9px;
+  .fld input{width:100%; background:var(--card2); border:1px solid var(--line); border-radius:9px;
     color:var(--txt); font-family:inherit; font-size:16px; padding:9px 11px;}
   .fld input:focus{outline:none; border-color:var(--acc);}
   .btn{display:block; width:100%; padding:12px; border-radius:11px; border:1px solid var(--line);
@@ -192,12 +252,30 @@
   .rl .t-sofort{background:var(--okbg); color:var(--ok); border:1px solid rgba(63,185,106,.4);}
   .rl .t-offen{background:rgba(217,161,59,.14); color:var(--open); border:1px solid rgba(217,161,59,.4);}
   .empty{color:var(--faint); font-size:13px; padding:6px 0;}
+  #ask-overlay{display:none; position:fixed; inset:0; z-index:70;
+    background:rgba(8,10,14,.55); align-items:center; justify-content:center; padding:24px;}
+  #ask-box{background:var(--sheet); color:var(--txt); border:1px solid var(--line);
+    border-radius:14px; max-width:340px; width:100%; padding:18px 18px 14px;
+    box-shadow:0 14px 44px rgba(0,0,0,.35);}
+  #ask-msg{font-size:14.5px; line-height:1.45; white-space:pre-line; margin-bottom:16px;}
+  #ask-btns{display:flex; gap:10px; justify-content:flex-end;}
+  .ask-btn{min-height:44px; padding:0 16px; border-radius:10px; border:1px solid var(--line);
+    font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;
+    background:var(--card2); color:var(--dim);}
+  .ask-ok{background:var(--acc); border-color:var(--acc); color:#fff;}
+  .ask-danger{background:var(--nok); border-color:var(--nok); color:#fff;}
 </style>
 </head>
 <body>
+<script>
+/* Theme sofort setzen, bevor gerendert wird (Default hell) */
+(function(){ try{ var s=localStorage.getItem('abnahme-theme'); document.documentElement.setAttribute('data-theme', (s==='dark')?'dark':'light'); }catch(e){ document.documentElement.setAttribute('data-theme','light'); } })();
+</script>
+
+<div id="bg-layer"></div>
 
 <div id="topbar">
-  <h1>Abnahmeprotokoll Neufahrzeug <span style="color:var(--faint);font-size:12px;font-weight:600">v3.1</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span style="color:var(--faint);font-size:12px;font-weight:600">v3.4</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -212,6 +290,13 @@
 <div class="page act" id="pg-check"></div>
 
 <div class="page" id="pg-data">
+  <div class="fcard">
+    <h2>Darstellung</h2>
+    <div class="theme-seg">
+      <button id="th-light" class="theme-btn">☀︎ Hell</button>
+      <button id="th-dark" class="theme-btn">☾ Dunkel</button>
+    </div>
+  </div>
   <div class="fcard">
     <h2>Fahrzeugdaten</h2>
     <div class="fld"><label>Hersteller</label><input id="m-hersteller" placeholder="Anadolu Isuzu"></div>
@@ -283,6 +368,16 @@
     <button class="sheet-btn" id="txt-copy">Kopieren</button>
     <button class="sheet-btn" id="txt-import">Importieren</button>
     <button class="sheet-btn sheet-cancel" id="txt-close">Schließen</button>
+  </div>
+</div>
+
+<div id="ask-overlay">
+  <div id="ask-box">
+    <div id="ask-msg"></div>
+    <div id="ask-btns">
+      <button id="ask-no" class="ask-btn ask-cancel">Abbrechen</button>
+      <button id="ask-yes" class="ask-btn ask-ok">OK</button>
+    </div>
   </div>
 </div>
 
@@ -837,6 +932,12 @@ function fotoClear(){
   if(idb){ try{ idb.transaction('fotos','readwrite').objectStore('fotos').clear(); }catch(e){} }
   fotoIndex = {};
 }
+function fotoDelAll(code){
+  (fotoIndex[code]||[]).forEach(function(f){
+    if(idb){ try{ idb.transaction('fotos','readwrite').objectStore('fotos').delete(f.key); }catch(e){} }
+  });
+  fotoIndex[code] = [];
+}
 function fotoCount(code){ return (fotoIndex[code]||[]).length; }
 
 function resizeImage(file){
@@ -911,6 +1012,7 @@ function buildChecklist(){
     shown++;
     var st=state.items[code];
     var cls = st ? (' s-'+st.s) : '';
+    if(st && st.s==='nok' && st.col) cls += ' collapsed';
     html += '<div class="it'+cls+'" data-code="'+code+'">'
          +  '<div class="it-row">'
          +  '<div class="it-meta"><div class="it-code">'+code+'</div><div class="fs">'+esc(it[2])+'</div></div>'
@@ -928,8 +1030,18 @@ function buildChecklist(){
          +  '<div class="fotos" data-fotos="'+code+'">'+fotoRowHTML(code)+'</div>'
          +  '</div></div>';
   });
-  if(shown===0) html='<div class="empty-filter">Keine Punkte in diesem Filter.</div>';
-  $('#pg-check').innerHTML = html;
+  if(shown===0){
+    $('#pg-check').innerHTML='<div class="empty-filter">Keine Punkte in diesem Filter.</div>';
+    updateCounts(); return;
+  }
+  $('#pg-check').innerHTML =
+      '<div class="sheet">'
+    + '<div class="sheet-sticky">'
+    + '<div class="sheet-head"><span>Code · Prüfpunkt</span><span>Bewertung</span></div>'
+    + '<div class="sheet-legend"><span><b>F</b> = Funktionsprüfung</span><span><b>S</b> = Sichtprüfung</span></div>'
+    + '</div>'
+    + html
+    + '</div>';
   updateCounts();
 }
 
@@ -958,18 +1070,33 @@ $('#pg-check').addEventListener('click', function(ev){
   if(segBtn){
     var itEl=segBtn.closest('.it'), code=itEl.getAttribute('data-code');
     var sNew=segBtn.getAttribute('data-s'), cur=state.items[code];
-    if(cur && cur.s===sNew){ delete state.items[code]; }
-    else {
-      state.items[code]={s:sNew, b:(cur&&cur.b)||'', so:(cur&&cur.so)||false, d:(cur&&cur.d)||''};
-      if(sNew==='nok' && !state.items[code].d) state.items[code].d = state.meta.datum || new Date().toISOString().slice(0,10);
+    if(cur && cur.s===sNew){
+      var hasData = (cur.b && cur.b.trim()) || cur.so || fotoCount(code) > 0;
+      if(hasData){
+        uiConfirm('Punkt '+code+' zurücksetzen?\n\nBeanstandung, Datum und Fotos zu diesem Punkt werden gelöscht.').then(function(ok){
+          if(!ok) return;
+          fotoDelAll(code);
+          delete state.items[code];
+          persist();
+          buildChecklist();
+        });
+        return;
+      }
+      fotoDelAll(code);
+      delete state.items[code];
+      persist();
+      buildChecklist();
+      return;
     }
+    state.items[code]={s:sNew, b:(cur&&cur.b)||'', so:(cur&&cur.so)||false, d:(cur&&cur.d)||'', col:false};
+    if(sNew==='nok' && !state.items[code].d) state.items[code].d = state.meta.datum || new Date().toISOString().slice(0,10);
     persist();
     if(state.filter!=='alle'){ buildChecklist(); }
     else {
-      itEl.classList.remove('s-ok','s-nok');
-      if(state.items[code]) itEl.classList.add('s-'+state.items[code].s);
+      itEl.classList.remove('s-ok','s-nok','collapsed');
+      itEl.classList.add('s-'+state.items[code].s);
       var dIn=itEl.querySelector('input[type=date]');
-      if(dIn && state.items[code]) dIn.value=state.items[code].d||'';
+      if(dIn) dIn.value=state.items[code].d||'';
       updateCounts();
     }
     return;
@@ -981,6 +1108,17 @@ $('#pg-check').addEventListener('click', function(ev){
     state.items[code2].so=!state.items[code2].so;
     so.classList.toggle('on', state.items[code2].so);
     persist();
+    return;
+  }
+  var rowEl=ev.target.closest('.it-row');
+  if(rowEl){
+    var itEl2=rowEl.closest('.it'), code3=itEl2.getAttribute('data-code');
+    var stx=state.items[code3];
+    if(stx && stx.s==='nok'){
+      stx.col=!stx.col;
+      itEl2.classList.toggle('collapsed', !!stx.col);
+      persist();
+    }
   }
 });
 $('#pg-check').addEventListener('input', function(ev){
@@ -1053,8 +1191,8 @@ function addFotosFromFiles(files){
   });
   chain.then(function(){
     updateFotoRow(code);
-    if(fehler>0) alert(fehler+' Foto(s) konnten nicht verarbeitet werden (Bild unlesbar).');
-    else if(gekappt) alert('Maximal '+MAXF+' Fotos je Punkt — '+(list.length===1?'nur das erste wurde':'nur die ersten '+list.length+' wurden')+' übernommen.');
+    if(fehler>0) uiAlert(fehler+' Foto(s) konnten nicht verarbeitet werden (Bild unlesbar).');
+    else if(gekappt) uiAlert('Maximal '+MAXF+' Fotos je Punkt — '+(list.length===1?'nur das erste wurde':'nur die ersten '+list.length+' wurden')+' übernommen.');
   });
 }
 $('#cam').addEventListener('change', function(){ addFotosFromFiles(this.files); });
@@ -1062,12 +1200,14 @@ $('#cam2').addEventListener('change', function(){ addFotosFromFiles(this.files);
 $('#ov-close').addEventListener('click', function(){ $('#foto-overlay').classList.remove('act'); });
 $('#ov-del').addEventListener('click', function(){
   if(!ovKey) return;
-  if(!confirm('Dieses Foto löschen?')) return;
-  var k = ovKey, c = ovCode; ovKey = null;
-  fotoDel(k, c).then(function(){
-    $('#foto-overlay').classList.remove('act');
-    updateFotoRow(c);
-    if($('#pg-eval').classList.contains('act')) renderEval();
+  uiConfirm('Dieses Foto löschen?').then(function(ok){
+    if(!ok) return;
+    var k = ovKey, c = ovCode; ovKey = null;
+    fotoDel(k, c).then(function(){
+      $('#foto-overlay').classList.remove('act');
+      updateFotoRow(c);
+      if($('#pg-eval').classList.contains('act')) renderEval();
+    });
   });
 });
 
@@ -1088,19 +1228,22 @@ function bindMeta(){
   $('#txt-copy').addEventListener('click', function(){ copyText($('#txt-area').value); });
   $('#txt-import').addEventListener('click', function(){
     var data = parseBackup($('#txt-area').value);
-    if(!data){ alert('Kein gültiger Sicherungstext.'); return; }
-    if(!confirm('Stand vom '+(data.ts? data.ts.slice(0,10):'?')+' laden?\nAktueller Stand wird ersetzt (Text-Sicherung enthält keine Fotos).')) return;
-    applyBackup(data).then(function(){
-      $('#txt-overlay').classList.remove('act');
-      alert('Stand geladen.');
+    if(!data){ uiAlert('Kein gültiger Sicherungstext.'); return; }
+    uiConfirm('Stand vom '+(data.ts? data.ts.slice(0,10):'?')+' laden?\nAktueller Stand wird ersetzt (Text-Sicherung enthält keine Fotos).', {yes:'Laden', danger:false}).then(function(ok){
+      if(!ok) return;
+      applyBackup(data).then(function(){
+        $('#txt-overlay').classList.remove('act');
+        uiAlert('Stand geladen.');
+      });
     });
   });
   $('#btn-reset').addEventListener('click', function(){
-    if(confirm('Wirklich alle Bewertungen, Beanstandungen, Fotos und Fahrzeugdaten löschen?')){
+    uiConfirm('Wirklich alle Bewertungen, Beanstandungen, Fotos und Fahrzeugdaten löschen?').then(function(ok){
+      if(!ok) return;
       store.clear(); fotoClear(); state=freshState();
       META.forEach(function(k){ $('#m-'+k).value=state.meta[k]||''; });
       buildChecklist(); renderEval(); persist();
-    }
+    });
   });
 }
 
@@ -1131,7 +1274,7 @@ function renderEval(){
    + '<div class="legend">'
    + '<div class="leg"><span class="dot" style="background:var(--ok)"></span>OK<span class="n">'+s.ok+'</span></div>'
    + '<div class="leg"><span class="dot" style="background:var(--nok)"></span>NOK<span class="n">'+s.nok+'</span></div>'
-   + '<div class="leg"><span class="dot" style="background:#2a3340"></span>Offen<span class="n">'+s.open+'</span></div>'
+   + '<div class="leg"><span class="dot" style="background:var(--faint)"></span>Offen<span class="n">'+s.open+'</span></div>'
    + '</div></div>';
 
   if(s.done===0){
@@ -1236,7 +1379,7 @@ function shareReport(){
   var txt=buildReport();
   if(navigator.share){ navigator.share({title:'Abnahmeprotokoll Neufahrzeug', text:txt}).catch(function(){}); }
   else if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(function(){ alert('Bericht in die Zwischenablage kopiert.'); },
+    navigator.clipboard.writeText(txt).then(function(){ uiAlert('Bericht in die Zwischenablage kopiert.'); },
       function(){ prompt('Bericht (manuell kopieren):', txt); });
   } else { prompt('Bericht (manuell kopieren):', txt); }
 }
@@ -1271,11 +1414,11 @@ function shareFotos(){
       catch(e){}
     });
   });
-  if(files.length===0){ alert('Keine Fotos vorhanden.'); return; }
+  if(files.length===0){ uiAlert('Keine Fotos vorhanden.'); return; }
   if(navigator.canShare && navigator.canShare({files:files}) && navigator.share){
     navigator.share({files:files, title:'Mangelfotos Abnahmeprotokoll'}).catch(function(){});
   } else {
-    alert('Direktes Teilen wird hier nicht unterstützt.\nAlternative: Foto antippen und im Vollbild gedrückt halten → „Zu Fotos hinzufügen".');
+    uiAlert('Direktes Teilen wird hier nicht unterstützt.\nAlternative: Foto antippen und im Vollbild gedrückt halten → „Zu Fotos hinzufügen".');
   }
 }
 
@@ -1308,7 +1451,7 @@ function safeName(s){ return (s||'').replace(/[^\wÄÖÜäöüß-]+/g,'_').repla
 /* ============ PDF-Erstellung ============ */
 function buildPDF(){
   var JS = window.jspdf && window.jspdf.jsPDF;
-  if(!JS){ alert('PDF-Modul nicht geladen.'); return; }
+  if(!JS){ uiAlert('PDF-Modul nicht geladen.'); return; }
   var s = stats(), m = state.meta;
   var doc = new JS({unit:'mm', format:'a4'});
   var W = 210, ML = 15, MR = 15, CW = W - ML - MR, BOT = 282;
@@ -1474,7 +1617,7 @@ function buildPDF(){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(u); }, 30000);
   setTimeout(function(){
-    alert('Falls kein Speichern-Dialog erschien, blockiert die Schnellansicht das Teilen.\nÖffne die Datei in Safari (Hinweis oben in der App) — dort lässt sich das PDF teilen und sichern.');
+    uiAlert('Falls kein Speichern-Dialog erschien, blockiert die Schnellansicht das Teilen.\nÖffne die Datei in Safari (Hinweis oben in der App) — dort lässt sich das PDF teilen und sichern.');
   }, 600);
 }
 
@@ -1523,9 +1666,11 @@ function importBackup(file){
   var rd = new FileReader();
   rd.onload = function(){
     var data = parseBackup(rd.result);
-    if(!data){ alert('Das ist keine gültige Sicherung dieser App.'); return; }
-    if(!confirm('Sicherung vom '+(data.ts? data.ts.slice(0,10):'?')+' laden?\nAktueller Stand und Fotos werden ersetzt.')) return;
-    applyBackup(data).then(function(){ alert('Sicherung geladen.'); });
+    if(!data){ uiAlert('Das ist keine gültige Sicherung dieser App.'); return; }
+    uiConfirm('Sicherung vom '+(data.ts? data.ts.slice(0,10):'?')+' laden?\nAktueller Stand und Fotos werden ersetzt.', {yes:'Laden', danger:false}).then(function(ok){
+      if(!ok) return;
+      applyBackup(data).then(function(){ uiAlert('Sicherung geladen.'); });
+    });
   };
   rd.readAsText(file);
 }
@@ -1547,7 +1692,7 @@ function txtOverlay(mode, content){
 }
 function copyText(t){
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t).then(function(){ alert('In die Zwischenablage kopiert.'); },
+    navigator.clipboard.writeText(t).then(function(){ uiAlert('In die Zwischenablage kopiert.'); },
       function(){ legacyCopy(t); });
   } else legacyCopy(t);
   function legacyCopy(s){
@@ -1556,7 +1701,7 @@ function copyText(t){
     var ok = false;
     try{ ok = document.execCommand('copy'); }catch(e){}
     ta.readOnly = true;
-    alert(ok ? 'In die Zwischenablage kopiert.' : 'Bitte Text manuell markieren und kopieren.');
+    uiAlert(ok ? 'In die Zwischenablage kopiert.' : 'Bitte Text manuell markieren und kopieren.');
   }
 }
 
@@ -1574,8 +1719,72 @@ $$('#tabs button').forEach(function(b){
   });
 });
 
+/* ============ Eigenes Bestätigungs-/Hinweis-Fenster (System-Dialoge werden in der Vorschau blockiert) ============ */
+function uiModal(opts){
+  return new Promise(function(resolve){
+    var ov=document.getElementById('ask-overlay');
+    var msg=document.getElementById('ask-msg');
+    var yes=document.getElementById('ask-yes');
+    var no=document.getElementById('ask-no');
+    msg.textContent = opts.msg || '';
+    yes.textContent = opts.yes || 'OK';
+    yes.className = 'ask-btn ' + (opts.danger ? 'ask-danger' : 'ask-ok');
+    if(opts.no){ no.textContent=opts.no; no.style.display=''; }
+    else { no.style.display='none'; }
+    ov.style.display='flex';
+    function done(val){
+      ov.style.display='none';
+      yes.onclick=null; no.onclick=null; ov.onclick=null;
+      resolve(val);
+    }
+    yes.onclick=function(){ done(true); };
+    no.onclick=function(){ done(false); };
+    ov.onclick=function(e){ if(e.target===ov) done(false); };
+  });
+}
+function uiConfirm(msg, opts){
+  opts=opts||{};
+  return uiModal({msg:msg, yes:opts.yes||'Löschen', no:opts.no||'Abbrechen', danger:opts.danger!==false});
+}
+function uiAlert(msg){ return uiModal({msg:msg, yes:'OK', no:null, danger:false}); }
+
+/* ============ Topbar-Höhe für klebende Kopfzeile ============ */
+function syncTopbarHeight(){
+  var tb=document.getElementById('topbar');
+  if(!tb) return;
+  document.documentElement.style.setProperty('--topbar-h', tb.offsetHeight+'px');
+}
+function initStickyHead(){
+  syncTopbarHeight();
+  window.addEventListener('resize', syncTopbarHeight);
+  window.addEventListener('orientationchange', function(){ setTimeout(syncTopbarHeight,150); });
+  var tb=document.getElementById('topbar');
+  if(tb && window.ResizeObserver){ new ResizeObserver(syncTopbarHeight).observe(tb); }
+}
+
+/* ============ Theme ============ */
+var TKEY = 'abnahme-theme';
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  try{ localStorage.setItem(TKEY, t); }catch(e){}
+  var mc=document.querySelector('meta[name="theme-color"]');
+  if(mc) mc.setAttribute('content', t==='light' ? '#eef1f5' : '#10141a');
+  var bl=document.getElementById('th-light'), bd=document.getElementById('th-dark');
+  if(bl&&bd){ bl.classList.toggle('act', t==='light'); bd.classList.toggle('act', t==='dark'); }
+}
+function initTheme(){
+  var t='light';
+  try{ var s=localStorage.getItem(TKEY); if(s==='light'||s==='dark') t=s; }catch(e){}
+  applyTheme(t);
+  var bl=document.getElementById('th-light'), bd=document.getElementById('th-dark');
+  if(bl) bl.addEventListener('click', function(){ applyTheme('light'); });
+  if(bd) bd.addEventListener('click', function(){ applyTheme('dark'); });
+}
+
 /* ============ Boot ============ */
 function boot(){
+  initTheme();
+  initStickyHead();
   fotoOpen().then(fotoLoadAll).then(function(){
     buildChecklist(); bindMeta(); renderEval(); updateStorageWarn();
   });
@@ -1584,9 +1793,9 @@ if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded
 else { boot(); }
 </script>
 <script>
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(e){ console.log('SW-Fehler', e); });
+    navigator.serviceWorker.register('sw.js').catch(function(){ /* in eingeschränkten Umgebungen ignorieren */ });
   });
 }
 </script>
