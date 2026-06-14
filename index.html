@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.18</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.32</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -62,16 +62,20 @@
     -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line); padding:10px 14px 0;}
   #topbar h1{margin:0; font-size:15.5px; font-weight:700; letter-spacing:.2px; padding-right:42px;}
-  #theme-toggle{position:absolute; top:16px; right:14px; width:28px; height:28px; padding:0;
+  #theme-toggle{position:absolute; top:5px; right:14px; width:28px; height:28px; padding:0;
     border-radius:50%; border:1.5px solid var(--fieldbd); cursor:pointer;
     background:linear-gradient(90deg, #ece5d6 0 50%, #1b2330 50% 100%);
     box-shadow:0 1px 3px rgba(0,0,0,.18); transition:transform .35s ease;
     -webkit-tap-highlight-color:transparent;}
   html[data-theme="dark"] #theme-toggle{transform:rotate(180deg);}
-  #more-btn{ position:absolute; top:11px; right:48px; width:34px; height:34px; padding:0;
-    border:none; background:none; color:var(--txt); font-size:25px; line-height:1; cursor:pointer;
-    opacity:.8; -webkit-tap-highlight-color:transparent; }
-  #more-btn:active{ opacity:.45; }
+  #save-btn, #del-btn{ position:absolute; top:4px; width:30px; height:30px; padding:5px;
+    border:none; background:none; color:var(--txt); cursor:pointer; opacity:.82;
+    -webkit-tap-highlight-color:transparent; }
+  #save-btn{ right:108px; }
+  #del-btn{ right:62.5px; }
+  #save-btn svg, #del-btn svg{ width:20px; height:20px; display:block;
+    stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+  #save-btn:active, #del-btn:active{ opacity:.4; }
   #more-sheet{display:none; position:fixed; inset:0; z-index:55;}
   #more-sheet.act{display:block;}
   .sheet-btn.sheet-danger{ color:var(--nok); }
@@ -269,21 +273,13 @@
   .vin-seg > input{ position:absolute; inset:0; width:100%; height:100%; border:none; background:transparent;
     color:transparent; caret-color:transparent; font-size:16px; padding:0; z-index:2; -webkit-tap-highlight-color:transparent; }
   .vin-seg > input:focus{ outline:none; }
+  .vin-seg > input::selection{ background:transparent; color:transparent; }
+  .vin-seg > input::-moz-selection{ background:transparent; color:transparent; }
   .vin-cells{ display:grid; grid-template-columns:repeat(17,1fr); gap:3px; }
   .vin-cells .vc{ min-width:0; height:36px; display:flex; align-items:center; justify-content:center;
     border:1px solid var(--fieldbd); border-radius:4px; font-family:ui-monospace,'SF Mono',Menlo,monospace;
     font-size:15px; font-weight:700; color:var(--txt); background:var(--field); }
-  .vc.vc-wmi{ border-color:rgba(47,109,240,.55); background:rgba(47,109,240,.11); }
-  .vc.vc-vds{ border-color:rgba(31,157,87,.55); background:rgba(31,157,87,.11); }
-  .vc.vc-vis{ border-color:rgba(207,138,43,.6); background:rgba(207,138,43,.12); }
-  .vc.vc-year{ border-color:rgba(139,92,246,.7); background:rgba(139,92,246,.16); }
-  .vc.vc-check{ border-color:rgba(219,39,119,.65); background:rgba(219,39,119,.14); }
-  .vc.vc-plant{ border-color:rgba(13,148,136,.7); background:rgba(13,148,136,.15); }
-  .vin-seg.focus .vc.active{ box-shadow:inset 0 0 0 2px var(--acc); border-color:var(--acc); }
-  .info-btn{ display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%;
-    border:1px solid var(--dim); background:transparent; color:var(--dim); font-size:11px; font-weight:700;
-    font-family:Georgia,'Times New Roman',serif; font-style:italic; cursor:pointer; vertical-align:middle; margin-left:5px; padding:0; line-height:1; }
-  .info-btn:active{ background:var(--card2); }
+  .vin-seg.focus .vc.active{ box-shadow:inset 0 0 0 2px var(--txt); border-color:var(--txt); }
   .fld input::placeholder{color:var(--placeholder); opacity:1;}
   .btn{display:block; width:100%; padding:12px; border-radius:11px; border:1px solid var(--line);
     background:var(--card2); color:var(--txt); font-family:inherit; font-size:14px;
@@ -372,9 +368,10 @@
 
 <div id="topbar">
   <button id="to-overview" class="backlink">‹ Übersicht</button>
-  <button id="more-btn" aria-label="Protokoll-Menü">⋯</button>
+  <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
+  <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.18</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.32</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -400,7 +397,7 @@
     <h2>Fahrzeugdaten</h2>
     <div class="fld"><label>Hersteller</label><input id="m-hersteller" placeholder="Anadolu Isuzu"></div>
     <div class="fld"><label>Modell</label><input id="m-modell" placeholder="z. B. Novociti Life"></div>
-    <div class="fld"><label>VIN (Fahrgestellnummer)<button type="button" class="info-btn" id="vin-info" aria-label="Was bedeutet die VIN?">i</button></label><div class="vin-seg" id="vin-seg"><div class="vin-cells" id="vin-cells" aria-hidden="true"></div><input id="m-vin" maxlength="17" autocapitalize="characters" inputmode="text" autocomplete="off" spellcheck="false"></div><div class="fld-hint" id="vin-hint"></div><div class="fld-hint" id="vin-year" style="color:var(--dim);margin-top:2px"></div></div>
+    <div class="fld"><label>VIN (Fahrgestellnummer)</label><div class="vin-seg" id="vin-seg"><div class="vin-cells" id="vin-cells" aria-hidden="true"></div><input id="m-vin" autocapitalize="characters" inputmode="text" autocomplete="off" spellcheck="false"></div><div class="fld-hint" id="vin-hint"></div></div>
     <div class="fld"><label>Kennzeichen</label><input id="m-kennzeichen" autocapitalize="characters"></div>
     <div class="fld"><label>KM-Stand</label><input id="m-km" inputmode="numeric"></div>
     <div class="fld"><label>Datum</label><input id="m-datum" type="date"></div>
@@ -1394,77 +1391,87 @@ $('#ov-del').addEventListener('click', function(){
 
 /* ============ Kopfdaten ============ */
 var META=['hersteller','modell','vin','kennzeichen','km','datum','feuer','tacho'];
+/* VIN-Zusatzanzeigen (Hinweiszeile + Decoder) entfernt - nur reine Zifferneingabe. */
 function updateVinHint(el){
   var hint=$('#vin-hint'); if(!hint||!el) return;
-  var v=el.value||'';
-  if(!v){ hint.textContent=''; hint.className='fld-hint'; }
-  else if(v.length<17){ hint.textContent='Noch '+(17-v.length)+' von 17 Zeichen'; hint.className='fld-hint warn'; }
-  else { hint.textContent='\u2713 17 Zeichen'; hint.className='fld-hint ok'; }
+  var n=(el.value||'').length;
+  hint.className='fld-hint';
+  hint.textContent = n ? (n>=17 ? '\u2713 17 von 17 Stellen' : n+' von 17 Stellen') : '';
 }
-var VIN_YEAR={A:2010,B:2011,C:2012,D:2013,E:2014,F:2015,G:2016,H:2017,J:2018,K:2019,L:2020,M:2021,N:2022,P:2023,R:2024,S:2025,T:2026,V:2027,W:2028,X:2029,Y:2030,'1':2031,'2':2032,'3':2033,'4':2034,'5':2035,'6':2036,'7':2037,'8':2038,'9':2039};
-var VIN_WMI={"WVW":"VW","WVG":"VW","WV1":"VW","WV2":"VW","WAU":"Audi","WA1":"Audi","TRU":"Audi","WDB":"Mercedes-Benz","WDD":"Mercedes-Benz","WDC":"Mercedes-Benz","WDF":"Mercedes-Benz","W1K":"Mercedes-Benz","W1N":"Mercedes-Benz","WMX":"Mercedes-AMG","WBA":"BMW","WBS":"BMW M","WBY":"BMW","WBX":"BMW","WP0":"Porsche","WP1":"Porsche","W0L":"Opel","WMW":"Mini","WME":"Smart","WMA":"MAN","WAG":"Neoplan","WEB":"Mercedes-Benz (Bus)","WJM":"Iveco Magirus","WF0":"Ford","WAP":"Alpina","JT":"Toyota","JTH":"Lexus","JTM":"Toyota","JF":"Subaru","JH":"Honda","JN":"Nissan","JNK":"Infiniti","JM1":"Mazda","JMZ":"Mazda","JMB":"Mitsubishi","JMY":"Mitsubishi","JA3":"Mitsubishi","JA4":"Mitsubishi","JL5":"Mitsubishi Fuso","JA":"Isuzu","JAA":"Isuzu","JAL":"Isuzu","JAB":"Isuzu","JAC":"Isuzu","JS":"Suzuki","JD":"Daihatsu","JK":"Kawasaki","JY":"Yamaha","JH2":"Honda","KM":"Hyundai","KMH":"Hyundai","KN":"Kia","KNA":"Kia","KND":"Kia","KL":"Daewoo/GM","KPA":"SsangYong","KPT":"SsangYong","KNM":"Renault Samsung","VF1":"Renault","VF2":"Renault","VF6":"Renault Trucks","VF3":"Peugeot","VF7":"Citroen","VF9":"Bugatti","VNK":"Toyota","VNV":"Renault-Nissan","ZFA":"Fiat","ZFC":"Fiat","ZFF":"Ferrari","ZDF":"Ferrari","ZAR":"Alfa Romeo","ZLA":"Lancia","ZAM":"Maserati","ZCF":"Iveco","ZHW":"Lamborghini","ZDM":"Ducati","YV1":"Volvo","YV4":"Volvo","YV2":"Volvo Trucks","YV3":"Volvo (Bus)","YS2":"Scania","YS4":"Scania (Bus)","YS3":"Saab","SAL":"Land Rover","SAJ":"Jaguar","SAR":"Rover","SCC":"Lotus","SCF":"Aston Martin","SCB":"Bentley","SCA":"Rolls-Royce","SHH":"Honda","SJN":"Nissan","SDB":"Peugeot","VSS":"SEAT","VSX":"Opel","VSK":"Nissan","VS7":"Citroen","VSA":"Mercedes-Benz","VWV":"VW","TMB":"Skoda","TMA":"Hyundai","SUU":"Solaris","SUF":"Fiat","XLR":"DAF","XLB":"Volvo","XLE":"Scania","YCM":"Mazda","1G":"GM/Chevrolet","1GC":"Chevrolet","1GT":"GMC","1GY":"Cadillac","1G1":"Chevrolet","1FA":"Ford","1FT":"Ford","1FM":"Ford","1FD":"Ford","1FU":"Freightliner","1C":"Chrysler","1B":"Dodge","1J":"Jeep","1C4":"Jeep","1HG":"Honda","2HG":"Honda","1N4":"Nissan","5N1":"Nissan","4T1":"Toyota","5TD":"Toyota","4S":"Subaru","1L":"Lincoln","4US":"BMW","5UX":"BMW","1VW":"VW","3VW":"VW","5YJ":"Tesla","7SA":"Tesla","1YV":"Mazda","3MZ":"Mazda","NMT":"Toyota","NM0":"Ford","NM4":"Tofas (Fiat)","NLH":"Hyundai","NLA":"Honda","NLE":"Mercedes-Benz","NLR":"Otokar","NLT":"TEMSA","NMA":"MAN","NMB":"Mercedes-Benz","NMC":"BMC","NMS":"Otoyol","NNA":"Isuzu","LFV":"FAW-VW","LSV":"SAIC-VW","LSG":"SAIC-GM","LZW":"Wuling","LGB":"Dongfeng-Nissan","LVS":"Ford","LUC":"Honda","LET":"Isuzu","LZE":"Isuzu","LZM":"MAN","LGX":"BYD","LC0":"BYD","LJ1":"Chery","LB2":"Geely","LFM":"FAW-Toyota","MPA":"Isuzu","MP1":"Isuzu","MR0":"Toyota","MMB":"Mitsubishi","MMC":"Mitsubishi","MMT":"Mitsubishi","MNB":"Ford","MNT":"Nissan","MM8":"Mazda","MLH":"Honda","MHF":"Toyota","MHR":"Honda","PAC":"Isuzu","PE1":"Ford","MA3":"Maruti Suzuki","MBH":"Maruti Suzuki","MAT":"Tata","MAL":"Hyundai","MAK":"Honda","MAJ":"Ford","MA1":"Mahindra","MBJ":"Toyota","MEE":"Renault","MC2":"Volvo","AAV":"VW","AHT":"Toyota","AFA":"Ford","AC5":"Hyundai","MBR":"Mercedes-Benz"};
-function lookupWMI(v){if(!v||v.length<2)return null;return VIN_WMI[v.slice(0,3)]||VIN_WMI[v.slice(0,2)]||null;}
-var VIN_LAND={'1':'USA','4':'USA','5':'USA','2':'Kanada','3':'Mexiko','J':'Japan','K':'S\u00fcdkorea','L':'China','N':'T\u00fcrkei','S':'Gro\u00dfbritannien','V':'Frankreich/Spanien','W':'Deutschland','Y':'Schweden','Z':'Italien'};
-function updateVinYear(el){
-  var line=$('#vin-year'); if(!line||!el) return;
-  var v=el.value||'', parts=[];
-  var h=lookupWMI(v); if(h) parts.push(h);
-  if(v.length>=1){ var land=VIN_LAND[v.charAt(0)]; if(land) parts.push(land); }
-  if(v.length>=10){ var yr=VIN_YEAR[v.charAt(9)]; if(yr) parts.push('Modelljahr '+(yr-30)+'/'+yr); }
-  line.textContent = parts.join('   \u00b7   ');
-}
+function updateVinYear(el){}
+var vinActive=0, vinPrev='';
+function vinSetCaret(el){ try{ var p=Math.min(vinActive,(el.value||'').length); el.setSelectionRange(p,p); }catch(_){} }
 function renderVinCells(el){
   var box=$('#vin-cells'); if(!box||!el) return;
   var v=el.value||'', focused=(document.activeElement===el), html='';
   for(var i=0;i<17;i++){
-    var grp = i<3?'wmi':(i===8?'check':(i<9?'vds':(i===9?'year':(i===10?'plant':'vis'))));
     var ch=v[i]||'';
-    var active=(focused && i===v.length && v.length<17);
-    html+='<div class="vc vc-'+grp+(active?' active':'')+'">'+(ch?esc(ch):'')+'</div>';
+    var active=(focused && i===vinActive && vinActive<17);
+    html+='<div class="vc'+(active?' active':'')+'">'+(ch?esc(ch):'')+'</div>';
   }
   box.innerHTML=html;
 }
-function showVinInfo(){
-  uiModal({ html:
-    '<div style="text-align:left;line-height:1.5">'
-    + '<div style="font-weight:700;margin-bottom:6px">Aufbau der Fahrgestellnummer (VIN)</div>'
-    + '<div style="opacity:.85;margin-bottom:10px">17 Stellen nach ISO\u00a03779/3780. Erlaubt: A\u2013Z (ohne I, O, Q) und 0\u20139.</div>'
-    + '<div><b style="color:#2f6df0">Stellen 1\u20133 \u00b7 Weltherstellercode (WMI)</b><br>'
-      + '\u2022 1: Herkunftsland (W=D, J=Japan, N=T\u00fcrkei, 1/4/5=USA)<br>'
-      + '\u2022 2: Hersteller<br>'
-      + '\u2022 3: Fahrzeugart (Pkw, Lkw, Bus \u2026; 9 = unter 500 Fzg./Jahr)</div>'
-    + '<div style="margin-top:9px"><b style="color:#1f9d57">Stellen 4\u20139 \u00b7 Fahrzeugbeschreibung (VDS)</b><br>'
-      + '\u2022 4\u20138: Modell, Karosserie, Motor, Antrieb (herstellerspezifisch)<br>'
-      + '\u2022 <b style="color:#db2777">9: Pr\u00fcfziffer \u2013 Sonderstelle</b> \u2013 in USA/China verbindlich, in EU meist F\u00fcllzeichen</div>'
-    + '<div style="margin-top:9px"><b style="color:#cf8a2b">Stellen 10\u201317 \u00b7 Fahrzeug-Identifizierung (VIS)</b><br>'
-      + '\u2022 <b style="color:#8b5cf6">10: Modelljahr \u2013 Sonderstelle</b><br>'
-      + '<span style="opacity:.9">&nbsp;&nbsp;&nbsp;Der Code wiederholt sich alle 30 Jahre, daher zwei Lesarten (z.\u00a0B. T = 1996 oder 2026). L=2020, S=2025, T=2026, V=2027.</span><br>'
-      + '\u2022 <b style="color:#0d9488">11: Montagewerk \u2013 Sonderstelle</b><br>'
-      + '\u2022 12\u201317: laufende Produktionsnummer (die letzten 4 immer Ziffern)</div>'
-    + '<div style="margin-top:10px;opacity:.85;font-size:13px">In Europa sind Stelle\u00a09 (Pr\u00fcfziffer) und Stelle\u00a010 (Modelljahr) keine Pflicht, sondern g\u00e4ngige Praxis \u2013 daher nicht immer eindeutig.</div>'
-    + '</div>',
-    yes:'Verstanden', no:null });
+/* Tap auf eine Stelle -> diese Stelle anvisieren. KEINE native Auswahl (die erzeugt auf iOS den grauen Kasten). */
+function vinTapTo(el, clientX){
+  var box=$('#vin-cells'); if(!box||!el) return;
+  var cells=box.children, len=(el.value||'').length, idx=cells.length-1;
+  for(var i=0;i<cells.length;i++){
+    var r=cells[i].getBoundingClientRect();
+    if(clientX < r.right){ idx=i; break; }
+  }
+  if(idx>len) idx=len;
+  vinActive=idx;
+  vinSetCaret(el);
+  renderVinCells(el);
+}
+/* Schreibt einen bereinigten Wert zurueck und aktualisiert Anzeige + Speicher. */
+function vinCommit(el, val){
+  val=(val||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,17);
+  if(vinActive>17) vinActive=17; if(vinActive<0) vinActive=0;
+  el.value=val; vinPrev=val;
+  state.meta.vin=val; persist();
+  vinSetCaret(el);
+  updateVinHint(el); renderVinCells(el); updateVinYear(el);
+}
+/* Eingabe ueber das echte input-Event: nimmt NUR das getippte Zeichen und ueberschreibt
+   die angetippte Stelle (vinActive). Unabhaengig von Caret-Position und maxlength -> robust. */
+function vinHandleInput(el){
+  var raw=el.value||'', prev=vinPrev;
+  if(raw.length > prev.length){
+    var added=raw.length-prev.length;
+    var caret=el.selectionStart; if(caret==null||caret<0) caret=raw.length;
+    var start=caret-added; if(start<0) start=0;
+    var ins=raw.substr(start,added).toUpperCase().replace(/[^A-Z0-9]/g,'');
+    var arr=prev.split('');
+    for(var i=0;i<ins.length;i++){ if(vinActive>16) break; arr[vinActive]=ins[i]; vinActive++; }
+    vinCommit(el, arr.join(''));
+  } else if(raw.length < prev.length){
+    var arr2=prev.split('');
+    if(vinActive>0) vinActive--;
+    if(vinActive<arr2.length) arr2.splice(vinActive,1);
+    vinCommit(el, arr2.join(''));
+  } else {
+    vinCommit(el, raw);
+  }
 }
 function bindMeta(){
   META.forEach(function(k){
     var el=$('#m-'+k); el.value=state.meta[k]||'';
     el.addEventListener('input', function(){
-      if(k==='vin'){ el.value=el.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,17); }
-      else if(k==='kennzeichen'){ el.value=el.value.toUpperCase(); }
+      if(k==='vin'){ vinHandleInput(el); return; }
+      if(k==='kennzeichen'){ el.value=el.value.toUpperCase(); }
       else if(k==='km'){ el.value=el.value.replace(/[^0-9]/g,''); }
       state.meta[k]=el.value; persist();
-      if(k==='vin'){ updateVinHint(el); renderVinCells(el); updateVinYear(el); }
     });
   });
   var vinEl=$('#m-vin');
   if(vinEl){
-    vinEl.addEventListener('focus', function(){ var s=$('#vin-seg'); if(s) s.classList.add('focus'); renderVinCells(vinEl); });
+    vinEl.addEventListener('focus', function(){ var s=$('#vin-seg'); if(s) s.classList.add('focus'); vinPrev=(vinEl.value||'').toUpperCase().replace(/[^A-Z0-9]/g,''); vinActive=Math.min(vinPrev.length,16); vinSetCaret(vinEl); renderVinCells(vinEl); });
     vinEl.addEventListener('blur', function(){ var s=$('#vin-seg'); if(s) s.classList.remove('focus'); renderVinCells(vinEl); });
+    vinEl.addEventListener('click', function(e){ var x=e.clientX; setTimeout(function(){ vinTapTo(vinEl, x); }, 0); });
     renderVinCells(vinEl);
     updateVinYear(vinEl);
   }
-  var vinInfo=$('#vin-info');
-  if(vinInfo) vinInfo.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); showVinInfo(); });
   updateVinHint($('#m-vin'));
   $('#txt-close').addEventListener('click', function(){ $('#txt-overlay').classList.remove('act'); });
   $('#txt-backdrop').addEventListener('click', function(){ $('#txt-overlay').classList.remove('act'); });
@@ -2133,6 +2140,8 @@ function importAsNewProtocol(file){
   rd.readAsText(file);
 }
 if($('#more-btn')) $('#more-btn').addEventListener('click', moreOpen);
+if($('#save-btn')) $('#save-btn').addEventListener('click', exportBackup);
+if($('#del-btn')) $('#del-btn').addEventListener('click', deleteActiveProtocol);
 if($('#more-backdrop')) $('#more-backdrop').addEventListener('click', moreClose);
 if($('#more-cancel')) $('#more-cancel').addEventListener('click', moreClose);
 if($('#more-export')) $('#more-export').addEventListener('click', function(){ moreClose(); exportBackup(); });
