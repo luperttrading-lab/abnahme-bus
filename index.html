@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.32</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.37</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -289,6 +289,9 @@
   .btn + .btn{margin-top:8px;}
   .btn-sep{height:1px; background:var(--line); margin:16px 2px 14px;}
   .hint{font-size:11.5px; color:var(--faint); line-height:1.5; margin:10px 4px 0;}
+  .hint-link{display:inline-block; margin:12px 4px 2px; padding:0; background:none; border:none;
+    color:var(--acc); font-family:inherit; font-size:12px; font-weight:600; cursor:pointer;}
+  .hint-link:active{opacity:.5;}
 
   /* ---------- Auswertung ---------- */
   .donut-wrap{display:flex; align-items:center; gap:16px; padding:4px 2px 2px;}
@@ -371,7 +374,7 @@
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.32</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.37</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -387,17 +390,10 @@
 
 <div class="page" id="pg-data">
   <div class="fcard">
-    <h2>Darstellung</h2>
-    <div class="theme-seg">
-      <button id="th-light" class="theme-btn">☀︎ Hell</button>
-      <button id="th-dark" class="theme-btn">☾ Dunkel</button>
-    </div>
-  </div>
-  <div class="fcard">
     <h2>Fahrzeugdaten</h2>
     <div class="fld"><label>Hersteller</label><input id="m-hersteller" placeholder="Anadolu Isuzu"></div>
     <div class="fld"><label>Modell</label><input id="m-modell" placeholder="z. B. Novociti Life"></div>
-    <div class="fld"><label>VIN (Fahrgestellnummer)</label><div class="vin-seg" id="vin-seg"><div class="vin-cells" id="vin-cells" aria-hidden="true"></div><input id="m-vin" autocapitalize="characters" inputmode="text" autocomplete="off" spellcheck="false"></div><div class="fld-hint" id="vin-hint"></div></div>
+    <div class="fld"><label>VIN (Fahrgestellnummer)</label><div class="vin-seg" id="vin-seg"><div class="vin-cells" id="vin-cells" aria-hidden="true"></div><input id="m-vin" autocapitalize="characters" autocorrect="off" inputmode="text" autocomplete="off" spellcheck="false"></div><div class="fld-hint" id="vin-hint"></div></div>
     <div class="fld"><label>Kennzeichen</label><input id="m-kennzeichen" autocapitalize="characters"></div>
     <div class="fld"><label>KM-Stand</label><input id="m-km" inputmode="numeric"></div>
     <div class="fld"><label>Datum</label><input id="m-datum" type="date"></div>
@@ -1469,6 +1465,15 @@ function bindMeta(){
     vinEl.addEventListener('focus', function(){ var s=$('#vin-seg'); if(s) s.classList.add('focus'); vinPrev=(vinEl.value||'').toUpperCase().replace(/[^A-Z0-9]/g,''); vinActive=Math.min(vinPrev.length,16); vinSetCaret(vinEl); renderVinCells(vinEl); });
     vinEl.addEventListener('blur', function(){ var s=$('#vin-seg'); if(s) s.classList.remove('focus'); renderVinCells(vinEl); });
     vinEl.addEventListener('click', function(e){ var x=e.clientX; setTimeout(function(){ vinTapTo(vinEl, x); }, 0); });
+    /* Cursor auf der ersten Stelle: dort kann Backspace nicht nach links loeschen (kein input-Event).
+       Daher hier abfangen und das Zeichen der ersten Zelle direkt entfernen. */
+    vinEl.addEventListener('keydown', function(e){
+      if((e.key==='Backspace'||e.keyCode===8||e.which===8) && vinActive===0 && (vinEl.value||'').length>0){
+        e.preventDefault();
+        var arr=(vinEl.value||'').split(''); arr.splice(0,1);
+        vinActive=0; vinCommit(vinEl, arr.join(''));
+      }
+    });
     renderVinCells(vinEl);
     updateVinYear(vinEl);
   }
@@ -1500,6 +1505,13 @@ function donutSVG(s){
 function renderEval(){
   var s=stats(), h='';
   var soDone=s.noks.filter(function(n){return n.so;}).length;
+  var totalFotos = 0;
+  s.noks.forEach(function(n){ totalFotos += fotoCount(n.code); });
+
+  h+='<div class="fcard"><h2>Bericht</h2>'
+   + '<button class="btn primary" id="btn-pdf">PDF erstellen</button>'
+   + (totalFotos>0?('<button class="btn" id="btn-share-fotos">'+totalFotos+' Mangelfoto'+(totalFotos>1?'s':'')+' teilen</button>'):'')
+   + '<button class="hint-link" id="btn-pdf-info">ⓘ Was enthält das PDF?</button></div>';
 
   h+='<div class="fcard"><h2>Gesamtstand</h2><div class="donut-wrap">'+donutSVG(s)
    + '<div class="legend">'
@@ -1548,71 +1560,10 @@ function renderEval(){
   });
   h+='</div>';
 
-  var totalFotos = 0;
-  s.noks.forEach(function(n){ totalFotos += fotoCount(n.code); });
-  h+='<div class="fcard"><h2>Bericht</h2>'
-   + '<button class="btn primary" id="btn-pdf">PDF erstellen</button>'
-   + '<button class="btn" id="btn-share">Textbericht teilen / kopieren</button>'
-   + (totalFotos>0?('<button class="btn" id="btn-share-fotos">'+totalFotos+' Mangelfoto'+(totalFotos>1?'s':'')+' teilen</button>'):'')
-   + '<p class="hint">PDF im Aufbau des Original-Protokolls: Fahrzeugdaten, vollständige Prüftabelle mit Status, '
-   + 'Beanstandungsliste inkl. Fotos, Unterschriftszeilen. Funktioniert auch als Zwischenstand. '
-   + 'Fotos liegen auf diesem Gerät — vor Weitergabe der Datei separat teilen oder sichern.</p></div>';
-
   $('#pg-eval').innerHTML=h;
   var pb=$('#btn-pdf'); if(pb) pb.addEventListener('click', buildPDF);
-  var sb=$('#btn-share'); if(sb) sb.addEventListener('click', shareReport);
   var sf=$('#btn-share-fotos'); if(sf) sf.addEventListener('click', shareFotos);
-}
-
-/* ============ Bericht ============ */
-function buildReport(){
-  var s=stats(), m=state.meta, L=[];
-  function line(c){ L.push(c); }
-  line('ABNAHMEPROTOKOLL NEUFAHRZEUG');
-  line('============================');
-  line('Hersteller:   '+(m.hersteller||'—'));
-  line('Modell:       '+(m.modell||'—'));
-  line('VIN:          '+(m.vin||'—'));
-  line('Kennzeichen:  '+(m.kennzeichen||'—'));
-  line('KM-Stand:     '+(m.km||'—')+'   Datum: '+(m.datum||'—'));
-  line('Feuerlöscherprüfung: '+(m.feuer||'—'));
-  line('Tachoprüfung:        '+(m.tacho||'—'));
-  line('');
-  line('ERGEBNIS');
-  line('Geprüft '+s.done+'/'+s.tot+' · OK '+s.ok+' · NOK '+s.nok+' · offen '+s.open);
-  if(s.open>0) line('Status: PRÜFUNG UNVOLLSTÄNDIG ('+s.open+' Punkte offen)');
-  else if(s.nok>0) line('Status: ÜBERNAHME MIT BEANSTANDUNGEN');
-  else if(s.done>0) line('Status: ÜBERNAHME OHNE BEANSTANDUNGEN');
-  line('');
-  line('NOK-PUNKTE ('+s.nok+')');
-  if(s.noks.length===0) line('— keine —');
-  s.noks.forEach(function(n){
-    var fc = fotoCount(n.code);
-    line('['+n.code+'] '+n.txt+' ('+n.fs+')'+(n.so?'  [sofort behoben]':'  [offen]')+(n.d?('  Datum: '+n.d):'')+(fc>0?('  ['+fc+' Foto'+(fc>1?'s':'')+']'):''));
-  });
-  line('');
-  line('OFFENE PUNKTE ('+s.open+')');
-  if(s.opens.length===0) line('— keine —');
-  s.opens.forEach(function(o){ line('['+o.code+'] '+o.txt); });
-  line('');
-  line('BEANSTANDUNGSLISTE');
-  line('Zu Code | Beschreibung der Beanstandung');
-  if(s.noks.length===0) line('— keine —');
-  s.noks.forEach(function(n){
-    line(n.code+'  |  '+(n.b||'(Beschreibung fehlt)'));
-  });
-  line('');
-  line('Unterschrift Übergebender: ______________________');
-  line('Unterschrift Übernehmender: ______________________');
-  return L.join('\n');
-}
-function shareReport(){
-  var txt=buildReport();
-  if(navigator.share){ navigator.share({title:'Abnahmeprotokoll Neufahrzeug', text:txt}).catch(function(){}); }
-  else if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(function(){ uiAlert('Bericht in die Zwischenablage kopiert.'); },
-      function(){ prompt('Bericht (manuell kopieren):', txt); });
-  } else { prompt('Bericht (manuell kopieren):', txt); }
+  var pi=$('#btn-pdf-info'); if(pi) pi.addEventListener('click', function(){ uiModal({html:'<b>Was enthält das PDF?</b><br><br>PDF im Aufbau des Original-Protokolls: Fahrzeugdaten, vollständige Prüftabelle mit Status, Beanstandungsliste inkl. Fotos, Unterschriftszeilen. Funktioniert auch als Zwischenstand. Fotos liegen auf diesem Gerät — vor Weitergabe der Datei separat teilen oder sichern.', yes:'OK', no:null, danger:false}); });
 }
 
 /* ============ Sprung aus der Auswertung zum Prüfpunkt ============ */
