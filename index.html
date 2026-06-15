@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.58</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.59</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -400,7 +400,7 @@
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.58</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.59</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -1801,7 +1801,7 @@ function buildPDF(){
   doc.setTextColor(20); y += 13;
 
   /* Prüftabelle */
-  var col = {code:15, fs:14, st:21};
+  var col = {code:15, fs:14, st:28};
   col.txt = CW - col.code - col.fs - col.st;
   var x0 = ML, x1 = x0+col.code, x2 = x1+col.txt, x3 = x2+col.fs, x4 = x3+col.st;
   function tabHead(){
@@ -1828,7 +1828,12 @@ function buildPDF(){
     doc.setTextColor(20); doc.text(lines, x1+2, y+4.4);
     doc.setTextColor(60); doc.text(it[2], x2+2, y+4.4);
     if(st && st.s==='ok'){ doc.setTextColor(GRUEN[0],GRUEN[1],GRUEN[2]); doc.setFont('helvetica','bold'); doc.text('OK', x3+2, y+4.4); }
-    else if(st && st.s==='nok' && st.so){ doc.setTextColor(AMBER[0],AMBER[1],AMBER[2]); doc.setFont('helvetica','bold'); doc.text('behoben', x3+2, y+4.4); }
+    else if(st && st.s==='nok' && st.so){
+      doc.setFont('helvetica','bold'); doc.setTextColor(ROT[0],ROT[1],ROT[2]); doc.text('NOK', x3+2, y+4.4);
+      var wNOK=doc.getTextWidth('NOK');
+      doc.setDrawColor(ROT[0],ROT[1],ROT[2]); doc.setLineWidth(0.5); doc.line(x3+2, y+3.3, x3+2+wNOK, y+3.3); doc.setLineWidth(0.200025);
+      doc.setTextColor(GRUEN[0],GRUEN[1],GRUEN[2]); doc.text('behoben', x3+2+wNOK+1.8, y+4.4);
+    }
     else if(st && st.s==='nok'){ doc.setTextColor(ROT[0],ROT[1],ROT[2]); doc.setFont('helvetica','bold'); doc.text('NOK', x3+2, y+4.4); }
     else { doc.setTextColor(GRAU[0],GRAU[1],GRAU[2]); doc.text('offen', x3+2, y+4.4); }
     doc.setTextColor(20); doc.setFont('helvetica','normal');
