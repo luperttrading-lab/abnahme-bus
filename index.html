@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.53</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.54</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -398,7 +398,7 @@
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.53</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.54</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -468,7 +468,8 @@
     <button class="sheet-btn" id="card-open">Öffnen</button>
     <button class="sheet-btn" id="card-pdf">PDF erstellen</button>
     <button class="sheet-btn" id="card-export">Sicherung speichern</button>
-    <button class="sheet-btn sheet-danger" id="card-delete">Löschen</button>
+    <button class="sheet-btn" id="card-photo">Fahrzeugfoto löschen</button>
+    <button class="sheet-btn sheet-danger" id="card-delete">Komplette Abnahme löschen</button>
     <button class="sheet-btn sheet-cancel" id="card-cancel">Abbrechen</button>
   </div>
 </div>
@@ -1160,6 +1161,20 @@ function fotoReplaceVeh(pid, url){
     }catch(e){ res(); }
   });
 }
+/* Fahrzeugfoto eines Protokolls löschen */
+function fotoDeleteVeh(pid){
+  return new Promise(function(res){
+    if(!idb || !pid){ res(); return; }
+    try{
+      var cur=idb.transaction('fotos','readwrite').objectStore('fotos').openCursor();
+      cur.onsuccess=function(ev){ var c=ev.target.result;
+        if(c){ var v=c.value; if(v && v.pid===pid && v.code===VEH) c.delete(); c.continue(); }
+        else res();
+      };
+      cur.onerror=function(){ res(); };
+    }catch(e){ res(); }
+  });
+}
 /* Einmalige Migration: alte global gespeicherte Fotos (ohne pid) dem aktiven Protokoll zuordnen */
 function migrateOrphanFotos(){
   return new Promise(function(res){
@@ -1392,7 +1407,7 @@ function updateFotoRow(code){
   var el = $('.fotos[data-fotos="'+code+'"]');
   if(el) el.innerHTML = fotoRowHTML(code);
 }
-var camCode = null, ovKey = null, ovCode = null, vehTargetPid = null;
+var camCode = null, ovKey = null, ovCode = null, vehTargetPid = null, vehDelPid = null;
 
 document.addEventListener('click', function(ev){
   var add = ev.target.closest('.foto-add');
@@ -1407,7 +1422,7 @@ document.addEventListener('click', function(ev){
     ovKey = th.getAttribute('data-fkey'); ovCode = th.getAttribute('data-fcode');
     $('#ov-img').src = th.src;
     $('#ov-label').textContent = (ovCode===VEH ? 'Fahrzeugfoto' : ovCode + ' — Mangelfoto');
-    $('#ov-del').style.display='';
+    vehDelPid=null; $('#ov-del').style.display='';
     $('#foto-overlay').classList.add('act');
   }
 });
@@ -1447,8 +1462,20 @@ function addFotosFromFiles(files){
 }
 $('#cam').addEventListener('change', function(){ addFotosFromFiles(this.files); });
 $('#cam2').addEventListener('change', function(){ addFotosFromFiles(this.files); });
-$('#ov-close').addEventListener('click', function(){ $('#foto-overlay').classList.remove('act'); });
+$('#ov-close').addEventListener('click', function(){ $('#foto-overlay').classList.remove('act'); vehDelPid=null; });
 $('#ov-del').addEventListener('click', function(){
+  if(vehDelPid){
+    var vpid=vehDelPid; vehDelPid=null;
+    uiConfirm('Fahrzeugfoto löschen?').then(function(ok){
+      if(!ok) return;
+      fotoDeleteVeh(vpid).then(function(){
+        $('#foto-overlay').classList.remove('act');
+        if(store.getActiveId()===vpid){ fotoIndex[VEH]=[]; updateFotoRow(VEH); }
+        buildHomeList();
+      });
+    });
+    return;
+  }
   if(!ovKey) return;
   uiConfirm('Dieses Foto löschen?').then(function(ok){
     if(!ok) return;
@@ -2090,10 +2117,10 @@ function protoMetaLine(meta){
   }
   return parts.join(' · ');
 }
-function makeVehThumb(url, cls){
+function makeVehThumb(url, cls, pid){
   var img=document.createElement('img');
   img.className=cls; img.src=url; img.alt='Fahrzeugfoto';
-  img.onclick=function(ev){ ev.stopPropagation(); openVehLightbox(url); };
+  img.onclick=function(ev){ ev.stopPropagation(); openVehLightbox(url, pid); };
   return img;
 }
 function makeVehPlaceholder(pid, cls){
@@ -2103,9 +2130,10 @@ function makeVehPlaceholder(pid, cls){
   d.onclick=function(ev){ ev.stopPropagation(); vehUploadStart(pid); };
   return d;
 }
-function openVehLightbox(url){
+function openVehLightbox(url, pid){
   $('#ov-img').src=url; $('#ov-label').textContent='Fahrzeugfoto';
-  ovKey=null; ovCode=null; var del=$('#ov-del'); if(del) del.style.display='none';
+  ovKey=null; ovCode=VEH; vehDelPid = pid||null;
+  var del=$('#ov-del'); if(del) del.style.display = vehDelPid ? '' : 'none';
   $('#foto-overlay').classList.add('act');
 }
 function vehUploadStart(pid){
@@ -2151,13 +2179,13 @@ function buildHomeList(){
   fotoVehMap().then(function(map){
     Object.keys(cardEls).forEach(function(pid){
       var card=cardEls[pid]; if(!card || card.querySelector('.hi-thumb, .hi-thumb-ph')) return;
-      var slot = map[pid] ? makeVehThumb(map[pid], 'hi-thumb') : makeVehPlaceholder(pid, 'hi-thumb-ph');
+      var slot = map[pid] ? makeVehThumb(map[pid], 'hi-thumb', pid) : makeVehPlaceholder(pid, 'hi-thumb-ph');
       card.insertBefore(slot, card.firstChild);
     });
     if(contId){
       var c=$('#home-continue');
       if(c && !c.querySelector('.cont-thumb, .cont-thumb-ph')){
-        c.appendChild(map[contId] ? makeVehThumb(map[contId], 'cont-thumb') : makeVehPlaceholder(contId, 'cont-thumb-ph'));
+        c.appendChild(map[contId] ? makeVehThumb(map[contId], 'cont-thumb', contId) : makeVehPlaceholder(contId, 'cont-thumb-ph'));
       }
     }
   });
@@ -2201,6 +2229,8 @@ function cardLabelFor(id){
 function cardSheetOpen(id){
   cardTargetId=id;
   $('#card-title').textContent = cardLabelFor(id);
+  var ph=$('#card-photo');
+  if(ph){ ph.style.display='none'; fotoVehMap().then(function(m){ if(cardTargetId===id && m[id]) ph.style.display=''; }); }
   $('#card-sheet').classList.add('act');
 }
 function cardSheetClose(){ $('#card-sheet').classList.remove('act'); cardTargetId=null; }
@@ -2291,6 +2321,7 @@ if($('#card-open')) $('#card-open').addEventListener('click', function(){ var id
 if($('#card-pdf')) $('#card-pdf').addEventListener('click', function(){ var id=cardTargetId; cardSheetClose(); cardLoadThen(id, buildPDF); });
 if($('#card-export')) $('#card-export').addEventListener('click', function(){ var id=cardTargetId; cardSheetClose(); cardLoadThen(id, exportBackup); });
 if($('#card-delete')) $('#card-delete').addEventListener('click', function(){ var id=cardTargetId; cardSheetClose(); cardDeleteById(id); });
+if($('#card-photo')) $('#card-photo').addEventListener('click', function(){ var id=cardTargetId; cardSheetClose(); uiConfirm('Fahrzeugfoto dieser Abnahme löschen?').then(function(ok){ if(!ok) return; fotoDeleteVeh(id).then(function(){ if(store.getActiveId()===id){ fotoIndex[VEH]=[]; updateFotoRow(VEH); } buildHomeList(); }); }); });
 if($('#home-import')) $('#home-import').addEventListener('click', function(){ var i=$('#imp'); if(i){ i.value=''; i.click(); } });
 if($('#imp')) $('#imp').addEventListener('change', function(){ if(this.files && this.files[0]) importAsNewProtocol(this.files[0]); });
 
