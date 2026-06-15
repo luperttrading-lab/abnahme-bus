@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.48</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.51</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -106,11 +106,13 @@
   .home-cont .cont-sub{ font-size:15px; font-weight:500; opacity:.95; margin-top:5px; }
   .home-listhead{ font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
     color:var(--dim); margin:0 2px 10px; }
-  .home-item{ display:block; width:100%; text-align:left; padding:10px 14px 10px; border-radius:12px;
+  .home-item{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:10px 14px 10px; border-radius:12px;
     border:1px solid var(--line); background:var(--card); cursor:pointer; margin-bottom:8px;
     position:relative; -webkit-tap-highlight-color:transparent; }
   .home-item:active{ background:var(--card2); }
-  .home-item .hi-body{ padding-right:50px; }
+  .home-item .hi-body{ flex:1 1 auto; min-width:0; padding-right:46px; }
+  .home-item .hi-thumb{ flex:0 0 auto; width:50px; height:50px; border-radius:8px; object-fit:cover;
+    border:1px solid var(--line); background:var(--card2); cursor:pointer; }
   .home-item .hi-title{ font-size:15.5px; font-weight:700; color:var(--txt); }
   .home-item .hi-meta{ font-size:12.5px; color:var(--dim); margin-top:2px; }
   .home-item .hi-prog{ font-size:12px; color:var(--acc); font-weight:600; margin-top:4px; }
@@ -121,8 +123,10 @@
   .home-item .hi-edit svg{ width:23px; height:23px; }
   .home-item .hi-edit:active{ color:var(--txt); }
   .home-empty{ font-size:13px; color:var(--dim); padding:8px 2px; }
-  .backlink{ background:none; border:none; color:var(--acc); font-size:16px; font-weight:600;
-    cursor:pointer; padding:0 0 9px; display:block; -webkit-tap-highlight-color:transparent; }
+  .backlink{ background:var(--card2); border:1px solid var(--line); color:var(--acc); font-size:14px; font-weight:600;
+    cursor:pointer; padding:3px 10px 4px; border-radius:8px; display:inline-block; margin:0 0 9px;
+    -webkit-tap-highlight-color:transparent; }
+  .backlink:active{ background:var(--card); }
   #storage-warn{display:none; margin-top:8px; border-radius:9px;
     padding:7px 10px; font-size:11.5px; line-height:1.45; font-weight:600;}
   #storage-warn.warn-hard{background:rgba(217,161,59,.13);
@@ -384,7 +388,7 @@
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.48</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.51</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -407,6 +411,7 @@
     <div class="fld"><label>Kennzeichen</label><input id="m-kennzeichen" autocapitalize="characters"></div>
     <div class="fld"><label>KM-Stand</label><input id="m-km" inputmode="numeric"></div>
     <div class="fld"><label>Datum</label><input id="m-datum" type="date"></div>
+    <div class="fld"><label>Fahrzeugfoto</label><div class="fotos vehfoto" data-fotos="_veh"></div></div>
   </div>
   <div class="fcard">
     <h2>Prüfnachweise</h2>
@@ -1017,6 +1022,23 @@ function updateStorageWarn(){
 
 /* ============ Fotospeicher (IndexedDB) ============ */
 var MAXF = 4;                       // max. Fotos je Prüfpunkt
+var VEH = '_veh';                   // reservierter Code: Fahrzeugfoto (1 pro Protokoll)
+function maxFor(code){ return code===VEH ? 1 : MAXF; }
+/* Fahrzeugfotos ALLER Protokolle in einem Durchlauf: { pid -> url } */
+function fotoVehMap(){
+  return new Promise(function(res){
+    var map={};
+    if(!idb){ res(map); return; }
+    try{
+      var cur = idb.transaction('fotos','readonly').objectStore('fotos').openCursor();
+      cur.onsuccess = function(ev){ var c=ev.target.result;
+        if(c){ var v=c.value; if(v && v.code===VEH && !map[v.pid]) map[v.pid]=v.url; c.continue(); }
+        else res(map);
+      };
+      cur.onerror = function(){ res(map); };
+    }catch(e){ res(map); }
+  });
+}
 var fotoIndex = {};                 // code -> [{key, url}]
 var idb = null;
 function fotoOpen(){
@@ -1336,7 +1358,7 @@ function fotoRowHTML(code, viewOnly){
   var h = (fotoIndex[code]||[]).map(function(f){
     return '<img class="foto-th" src="'+f.url+'" data-fkey="'+f.key+'" data-fcode="'+code+'" alt="Foto '+code+'">';
   }).join('');
-  if(!viewOnly && fotoCount(code) < MAXF){
+  if(!viewOnly && fotoCount(code) < maxFor(code)){
     h += '<button class="foto-add" data-cam="'+code+'">📷<small>FOTO</small></button>';
   }
   return h;
@@ -1351,7 +1373,7 @@ document.addEventListener('click', function(ev){
   var add = ev.target.closest('.foto-add');
   if(add){
     camCode = add.getAttribute('data-cam');
-    $('#sheet-title').textContent = camCode + ' — Mangelfoto hinzufügen';
+    $('#sheet-title').textContent = (camCode===VEH ? 'Fahrzeugfoto hinzufügen' : camCode + ' — Mangelfoto hinzufügen');
     $('#foto-sheet').classList.add('act');
     return;
   }
@@ -1359,7 +1381,8 @@ document.addEventListener('click', function(ev){
   if(th){
     ovKey = th.getAttribute('data-fkey'); ovCode = th.getAttribute('data-fcode');
     $('#ov-img').src = th.src;
-    $('#ov-label').textContent = ovCode + ' — Mangelfoto';
+    $('#ov-label').textContent = (ovCode===VEH ? 'Fahrzeugfoto' : ovCode + ' — Mangelfoto');
+    $('#ov-del').style.display='';
     $('#foto-overlay').classList.add('act');
   }
 });
@@ -1373,7 +1396,7 @@ $('#foto-sheet .sheet-backdrop').addEventListener('click', function(){ sheetClos
 function addFotosFromFiles(files){
   if(!camCode || !files || files.length===0) return;
   var code = camCode; camCode = null;
-  var frei = MAXF - fotoCount(code);
+  var frei = maxFor(code) - fotoCount(code);
   if(frei <= 0) return;
   var list = Array.prototype.slice.call(files, 0, frei);
   var gekappt = files.length > frei;
@@ -1387,7 +1410,7 @@ function addFotosFromFiles(files){
   chain.then(function(){
     updateFotoRow(code);
     if(fehler>0) uiAlert(fehler+' Foto(s) konnten nicht verarbeitet werden (Bild unlesbar).');
-    else if(gekappt) uiAlert('Maximal '+MAXF+' Fotos je Punkt — '+(list.length===1?'nur das erste wurde':'nur die ersten '+list.length+' wurden')+' übernommen.');
+    else if(gekappt) uiAlert('Maximal '+maxFor(code)+' Fotos je Punkt — '+(list.length===1?'nur das erste wurde':'nur die ersten '+list.length+' wurden')+' übernommen.');
   });
 }
 $('#cam').addEventListener('change', function(){ addFotosFromFiles(this.files); });
@@ -1624,6 +1647,7 @@ $('#pg-eval').addEventListener('click', function(ev){
 function shareFotos(){
   var files = [];
   Object.keys(fotoIndex).forEach(function(code){
+    if(code===VEH) return;
     fotoIndex[code].forEach(function(f, i){
       try{ files.push(new File([dataURLtoBlob(f.url)], 'Mangel-'+code+'-'+(i+1)+'.jpg', {type:'image/jpeg'})); }
       catch(e){}
@@ -2020,7 +2044,10 @@ function progressOf(items){
   return d;
 }
 function protoLabel(meta){
-  return (meta && meta.modell && meta.modell.trim()) ? meta.modell.trim() : 'Unbenannte Abnahme';
+  if(!meta) return 'Unbenannte Abnahme';
+  var h=(meta.hersteller||'').trim(), m=(meta.modell||'').trim();
+  var s=[h,m].filter(Boolean).join(' ');
+  return s || 'Unbenannte Abnahme';
 }
 function protoMetaLine(meta){
   var parts=[];
@@ -2050,6 +2077,7 @@ function buildHomeList(){
   $('#home-listhead').style.display = list.length ? 'block' : 'none';
   var host=$('#home-list'); host.innerHTML='';
   if(!list.length){ host.innerHTML='<div class="home-empty">Noch keine Abnahmen angelegt.</div>'; return; }
+  var cardEls = {};
   list.forEach(function(e){
     var d=progressOf(e.items), tot=ITEMS.length, ml=protoMetaLine(e.meta);
     var b=document.createElement('div');
@@ -2062,6 +2090,21 @@ function buildHomeList(){
     var ed=b.querySelector('.hi-edit');
     if(ed) ed.onclick=function(ev){ ev.stopPropagation(); cardSheetOpen(e.id); };
     host.appendChild(b);
+    cardEls[e.id]=b;
+  });
+  fotoVehMap().then(function(map){
+    Object.keys(map).forEach(function(pid){
+      var card=cardEls[pid]; if(!card || card.querySelector('.hi-thumb')) return;
+      var url=map[pid];
+      var img=document.createElement('img');
+      img.className='hi-thumb'; img.src=url; img.alt='Fahrzeugfoto';
+      img.onclick=function(ev){ ev.stopPropagation();
+        $('#ov-img').src=url; $('#ov-label').textContent='Fahrzeugfoto';
+        ovKey=null; ovCode=null; var del=$('#ov-del'); if(del) del.style.display='none';
+        $('#foto-overlay').classList.add('act');
+      };
+      card.insertBefore(img, card.firstChild);
+    });
   });
 }
 function showHome(){ buildHomeList(); document.body.classList.add('view-home'); window.scrollTo(0,0); }
@@ -2073,7 +2116,7 @@ function openProtocol(id){
   renderVinCells($('#m-vin'));
   updateVinYear($('#m-vin'));
   fotoLoadAll().then(function(){
-    buildChecklist(); renderEval();
+    buildChecklist(); renderEval(); updateFotoRow(VEH);
     $$('#tabs button').forEach(function(x){ x.classList.toggle('act', x.getAttribute('data-pg')==='check'); });
     $$('.page').forEach(function(p){ p.classList.remove('act'); });
     $('#pg-check').classList.add('act');
