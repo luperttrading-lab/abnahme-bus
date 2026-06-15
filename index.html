@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.37</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.48</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -68,16 +68,20 @@
     box-shadow:0 1px 3px rgba(0,0,0,.18); transition:transform .35s ease;
     -webkit-tap-highlight-color:transparent;}
   html[data-theme="dark"] #theme-toggle{transform:rotate(180deg);}
-  #save-btn, #del-btn{ position:absolute; top:4px; width:30px; height:30px; padding:5px;
+  #pdf-btn, #save-btn, #del-btn{ position:absolute; top:4px; width:30px; height:30px; padding:5px;
     border:none; background:none; color:var(--txt); cursor:pointer; opacity:.82;
     -webkit-tap-highlight-color:transparent; }
-  #save-btn{ right:108px; }
+  #pdf-btn{ right:156.2px; width:34px; padding:0; display:flex; align-items:center; justify-content:center; }
+  #save-btn{ right:106.3px; }
   #del-btn{ right:62.5px; }
-  #save-btn svg, #del-btn svg{ width:20px; height:20px; display:block;
+  #pdf-btn svg, #save-btn svg, #del-btn svg{ width:20px; height:20px; display:block;
     stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
-  #save-btn:active, #del-btn:active{ opacity:.4; }
-  #more-sheet{display:none; position:fixed; inset:0; z-index:55;}
-  #more-sheet.act{display:block;}
+  #pdf-btn svg{ width:34px; height:18px; stroke-width:1.4; }
+  #pdf-btn:active, #save-btn:active, #del-btn:active{ opacity:.4; }
+  #pdf-btn .pdf-text{ fill:currentColor; stroke:none; font-weight:700; font-size:12px;
+    letter-spacing:-.5px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; }
+  #more-sheet, #card-sheet{display:none; position:fixed; inset:0; z-index:55;}
+  #more-sheet.act, #card-sheet.act{display:block;}
   .sheet-btn.sheet-danger{ color:var(--nok); }
   #topbar .sub{font-size:12px; color:var(--dim); margin-top:9px;
     font-variant-numeric:tabular-nums; display:flex; justify-content:flex-start; gap:7px; flex-wrap:wrap;}
@@ -106,13 +110,18 @@
     border:1px solid var(--line); background:var(--card); cursor:pointer; margin-bottom:8px;
     position:relative; -webkit-tap-highlight-color:transparent; }
   .home-item:active{ background:var(--card2); }
-  .home-item .hi-title{ font-size:15.5px; font-weight:700; color:var(--txt); padding-right:18px; }
+  .home-item .hi-body{ padding-right:50px; }
+  .home-item .hi-title{ font-size:15.5px; font-weight:700; color:var(--txt); }
   .home-item .hi-meta{ font-size:12.5px; color:var(--dim); margin-top:2px; }
   .home-item .hi-prog{ font-size:12px; color:var(--acc); font-weight:600; margin-top:4px; }
-  .home-item::after{ content:'›'; position:absolute; right:13px; top:50%; transform:translateY(-50%);
-    color:var(--faint); font-size:21px; line-height:1; }
+  .home-item .hi-edit{ position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    width:42px; height:46px; display:flex; align-items:center; justify-content:center;
+    background:none; border:none; padding:0; margin:0; cursor:pointer; color:var(--dim);
+    -webkit-tap-highlight-color:transparent; }
+  .home-item .hi-edit svg{ width:23px; height:23px; }
+  .home-item .hi-edit:active{ color:var(--txt); }
   .home-empty{ font-size:13px; color:var(--dim); padding:8px 2px; }
-  .backlink{ background:none; border:none; color:var(--acc); font-size:14px; font-weight:600;
+  .backlink{ background:none; border:none; color:var(--acc); font-size:16px; font-weight:600;
     cursor:pointer; padding:0 0 9px; display:block; -webkit-tap-highlight-color:transparent; }
   #storage-warn{display:none; margin-top:8px; border-radius:9px;
     padding:7px 10px; font-size:11.5px; line-height:1.45; font-weight:600;}
@@ -371,10 +380,11 @@
 
 <div id="topbar">
   <button id="to-overview" class="backlink">‹ Übersicht</button>
+  <button id="pdf-btn" aria-label="PDF erstellen"><svg viewBox="0 0 34 18"><rect x="1.5" y="1" width="31" height="16" rx="3"/><text class="pdf-text" x="17" y="13.5" text-anchor="middle">PDF</text></svg></button>
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.37</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.48</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -434,6 +444,17 @@
     <button class="sheet-btn" id="more-export">Protokoll sichern</button>
     <button class="sheet-btn sheet-danger" id="more-delete">Protokoll löschen</button>
     <button class="sheet-btn sheet-cancel" id="more-cancel">Abbrechen</button>
+  </div>
+</div>
+<div id="card-sheet">
+  <div class="sheet-backdrop" id="card-backdrop"></div>
+  <div class="sheet-box">
+    <div class="sheet-title" id="card-title">Protokoll</div>
+    <button class="sheet-btn" id="card-open">Öffnen</button>
+    <button class="sheet-btn" id="card-pdf">PDF erstellen</button>
+    <button class="sheet-btn" id="card-export">Sicherung speichern</button>
+    <button class="sheet-btn sheet-danger" id="card-delete">Löschen</button>
+    <button class="sheet-btn sheet-cancel" id="card-cancel">Abbrechen</button>
   </div>
 </div>
 <div id="foto-overlay">
@@ -1450,16 +1471,28 @@ function vinHandleInput(el){
     vinCommit(el, raw);
   }
 }
+function kmFormat(s){
+  var d=(s||'').replace(/\D/g,'');
+  return d ? d.replace(/\B(?=(\d{3})+(?!\d))/g,'.') : '';
+}
 function bindMeta(){
   META.forEach(function(k){
     var el=$('#m-'+k); el.value=state.meta[k]||'';
     el.addEventListener('input', function(){
       if(k==='vin'){ vinHandleInput(el); return; }
       if(k==='kennzeichen'){ el.value=el.value.toUpperCase(); }
-      else if(k==='km'){ el.value=el.value.replace(/[^0-9]/g,''); }
+      else if(k==='km'){
+        var kmOld=el.value, kmPos=el.selectionStart||0;
+        var kmBefore=kmOld.slice(0,kmPos).replace(/\D/g,'').length;
+        el.value=kmFormat(kmOld);
+        var kmNp=0, kmSeen=0;
+        if(kmBefore>0){ for(; kmNp<el.value.length; kmNp++){ var cc=el.value.charCodeAt(kmNp); if(cc>=48&&cc<=57) kmSeen++; if(kmSeen===kmBefore){ kmNp++; break; } } }
+        try{ el.setSelectionRange(kmNp,kmNp); }catch(_){}
+      }
       state.meta[k]=el.value; persist();
     });
   });
+  var kmEl0=$('#m-km'); if(kmEl0){ kmEl0.value=kmFormat(kmEl0.value); state.meta.km=kmEl0.value; }
   var vinEl=$('#m-vin');
   if(vinEl){
     vinEl.addEventListener('focus', function(){ var s=$('#vin-seg'); if(s) s.classList.add('focus'); vinPrev=(vinEl.value||'').toUpperCase().replace(/[^A-Z0-9]/g,''); vinActive=Math.min(vinPrev.length,16); vinSetCaret(vinEl); renderVinCells(vinEl); });
@@ -1524,7 +1557,7 @@ function renderEval(){
     h+='<div class="verdict v-open"><b>Noch keine Prüfung erfasst</b>Im Tab „Protokoll" jeden Punkt mit OK oder NOK bewerten.</div>';
   } else if(s.open>0){
     h+='<div class="verdict v-open"><b>Prüfung unvollständig — '+s.open+' Punkte offen</b>'
-     + 'Vor Unterschrift alle Punkte bewerten (Filter „Offen" nutzen).'
+     + 'Vor Unterschrift alle Punkte bewerten.'
      + (s.nok>0?(' Bisher '+s.nok+' NOK erfasst'+(soDone>0?(', davon '+soDone+' sofort behoben'):'')+'.'):'')+'</div>';
   } else if(s.nok>0){
     var rest=s.nok-soDone;
@@ -2019,12 +2052,15 @@ function buildHomeList(){
   if(!list.length){ host.innerHTML='<div class="home-empty">Noch keine Abnahmen angelegt.</div>'; return; }
   list.forEach(function(e){
     var d=progressOf(e.items), tot=ITEMS.length, ml=protoMetaLine(e.meta);
-    var b=document.createElement('button');
-    b.className='home-item';
-    b.innerHTML = '<div class="hi-title">'+esc(protoLabel(e.meta))+'</div>'
+    var b=document.createElement('div');
+    b.className='home-item'; b.setAttribute('role','button');
+    b.innerHTML = '<div class="hi-body"><div class="hi-title">'+esc(protoLabel(e.meta))+'</div>'
       + (ml?('<div class="hi-meta">'+esc(ml)+'</div>'):'')
-      + '<div class="hi-prog">'+d+' / '+tot+' geprüft</div>';
+      + '<div class="hi-prog">'+d+' / '+tot+' geprüft</div></div>'
+      + '<button class="hi-edit" aria-label="Aktionen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L8 19 L19 8 L16 5 L5 16 Z"/><path d="M14 7 L17 10"/></svg></button>';
     b.onclick=function(){ openProtocol(e.id); };
+    var ed=b.querySelector('.hi-edit');
+    if(ed) ed.onclick=function(ev){ ev.stopPropagation(); cardSheetOpen(e.id); };
     host.appendChild(b);
   });
 }
@@ -2058,6 +2094,30 @@ function backupFilename(){
 }
 function moreOpen(){ $('#more-sheet').classList.add('act'); }
 function moreClose(){ $('#more-sheet').classList.remove('act'); }
+var cardTargetId = null;
+function cardLabelFor(id){
+  var L=store.list();
+  for(var i=0;i<L.length;i++){ if(L[i].id===id) return protoLabel(L[i].meta); }
+  return 'Protokoll';
+}
+function cardSheetOpen(id){
+  cardTargetId=id;
+  $('#card-title').textContent = cardLabelFor(id);
+  $('#card-sheet').classList.add('act');
+}
+function cardSheetClose(){ $('#card-sheet').classList.remove('act'); cardTargetId=null; }
+function cardLoadThen(id, cb){
+  if(store.getActiveId()!==id) store.setActiveId(id);
+  state = store.getActive() || freshState();
+  fotoLoadAll().then(function(){ cb(); });
+}
+function cardDeleteById(id){
+  uiConfirm('Dieses Protokoll wirklich löschen?\n\nBewertungen, Beanstandungen und Fahrzeugdaten gehen unwiderruflich verloren.',
+    {yes:'Löschen', danger:true}).then(function(ok){
+    if(!ok) return;
+    fotoDeleteProtocol(id).then(function(){ store.remove(id); buildHomeList(); });
+  });
+}
 function deleteActiveProtocol(){
   var id = store.getActiveId();
   if(!id){ showHome(); return; }
@@ -2091,12 +2151,19 @@ function importAsNewProtocol(file){
   rd.readAsText(file);
 }
 if($('#more-btn')) $('#more-btn').addEventListener('click', moreOpen);
+if($('#pdf-btn')) $('#pdf-btn').addEventListener('click', buildPDF);
 if($('#save-btn')) $('#save-btn').addEventListener('click', exportBackup);
 if($('#del-btn')) $('#del-btn').addEventListener('click', deleteActiveProtocol);
 if($('#more-backdrop')) $('#more-backdrop').addEventListener('click', moreClose);
 if($('#more-cancel')) $('#more-cancel').addEventListener('click', moreClose);
 if($('#more-export')) $('#more-export').addEventListener('click', function(){ moreClose(); exportBackup(); });
 if($('#more-delete')) $('#more-delete').addEventListener('click', function(){ moreClose(); deleteActiveProtocol(); });
+if($('#card-backdrop')) $('#card-backdrop').addEventListener('click', cardSheetClose);
+if($('#card-cancel')) $('#card-cancel').addEventListener('click', cardSheetClose);
+if($('#card-open')) $('#card-open').addEventListener('click', function(){ var id=cardTargetId; cardSheetClose(); openProtocol(id); });
+if($('#card-pdf')) $('#card-pdf').addEventListener('click', function(){ var id=cardTargetId; cardSheetClose(); cardLoadThen(id, buildPDF); });
+if($('#card-export')) $('#card-export').addEventListener('click', function(){ var id=cardTargetId; cardSheetClose(); cardLoadThen(id, exportBackup); });
+if($('#card-delete')) $('#card-delete').addEventListener('click', function(){ var id=cardTargetId; cardSheetClose(); cardDeleteById(id); });
 if($('#home-import')) $('#home-import').addEventListener('click', function(){ var i=$('#imp'); if(i){ i.value=''; i.click(); } });
 if($('#imp')) $('#imp').addEventListener('change', function(){ if(this.files && this.files[0]) importAsNewProtocol(this.files[0]); });
 
