@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.54</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.55</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -263,6 +263,8 @@
     border:1px solid var(--line); background:var(--card2); color:var(--txt);
     font-family:inherit; font-size:15.5px; font-weight:600; cursor:pointer; text-align:center;}
   .sheet-btn + .sheet-btn{margin-top:8px;}
+  #card-photo{display:flex; align-items:center; justify-content:center; gap:10px;}
+  #card-photo img{width:26px; height:26px; border-radius:6px; object-fit:cover; flex:0 0 auto;}
   .sheet-cancel{background:none; border-color:transparent; color:var(--dim); font-weight:600;}
   .sheet-hint{font-size:11px; color:var(--faint); line-height:1.45; text-align:center;
     padding:9px 6px 2px;}
@@ -398,7 +400,7 @@
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.54</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.55</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -456,7 +458,7 @@
   <div class="sheet-backdrop" id="more-backdrop"></div>
   <div class="sheet-box">
     <div class="sheet-title">Dieses Protokoll</div>
-    <button class="sheet-btn" id="more-export">Protokoll sichern</button>
+    <button class="sheet-btn" id="more-export">Abnahme als Datei speichern</button>
     <button class="sheet-btn sheet-danger" id="more-delete">Protokoll löschen</button>
     <button class="sheet-btn sheet-cancel" id="more-cancel">Abbrechen</button>
   </div>
@@ -467,8 +469,8 @@
     <div class="sheet-title" id="card-title">Protokoll</div>
     <button class="sheet-btn" id="card-open">Öffnen</button>
     <button class="sheet-btn" id="card-pdf">PDF erstellen</button>
-    <button class="sheet-btn" id="card-export">Sicherung speichern</button>
-    <button class="sheet-btn" id="card-photo">Fahrzeugfoto löschen</button>
+    <button class="sheet-btn" id="card-export">Abnahme als Datei speichern</button>
+    <button class="sheet-btn" id="card-photo"><img id="card-photo-thumb" alt=""><span>Fahrzeugfoto löschen</span></button>
     <button class="sheet-btn sheet-danger" id="card-delete">Komplette Abnahme löschen</button>
     <button class="sheet-btn sheet-cancel" id="card-cancel">Abbrechen</button>
   </div>
@@ -2229,8 +2231,8 @@ function cardLabelFor(id){
 function cardSheetOpen(id){
   cardTargetId=id;
   $('#card-title').textContent = cardLabelFor(id);
-  var ph=$('#card-photo');
-  if(ph){ ph.style.display='none'; fotoVehMap().then(function(m){ if(cardTargetId===id && m[id]) ph.style.display=''; }); }
+  var ph=$('#card-photo'), pht=$('#card-photo-thumb');
+  if(ph){ ph.style.display='none'; fotoVehMap().then(function(m){ if(cardTargetId===id && m[id]){ if(pht) pht.src=m[id]; ph.style.display=''; } }); }
   $('#card-sheet').classList.add('act');
 }
 function cardSheetClose(){ $('#card-sheet').classList.remove('act'); cardTargetId=null; }

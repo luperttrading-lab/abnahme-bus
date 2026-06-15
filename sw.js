@@ -4,7 +4,7 @@
    - index.html: network-first (neueste Version), Cache nur als Offline-Fallback
    - übrige Dateien: cache-first (schnell), Netz als Nachschub
    Bei jeder neuen App-Version die CACHE-Zahl erhöhen → alter Cache wird ersetzt. */
-var CACHE = 'abnahme-bus-v4.54';
+var CACHE = 'abnahme-bus-v4.55';
 var SHELL = [
   './',
   './index.html',
