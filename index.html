@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.57</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.58</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -400,7 +400,7 @@
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.57</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.58</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -1756,7 +1756,7 @@ function buildPDF(){
   var doc = new JS({unit:'mm', format:'a4'});
   var W = 210, ML = 15, MR = 15, CW = W - ML - MR, BOT = 282;
   var y = 16;
-  var BLAU = [74,134,200], GRUEN = [46,140,80], ROT = [196,56,48], GRAU = [120,128,140];
+  var BLAU = [74,134,200], GRUEN = [46,140,80], ROT = [196,56,48], GRAU = [120,128,140], AMBER = [201,116,18];
 
   function np(){ doc.addPage(); y = 16; }
   function need(h){ if(y + h > BOT) np(); }
@@ -1794,7 +1794,8 @@ function buildPDF(){
   else { statusTxt='NOCH KEINE PRÜFUNG ERFASST'; statusCol=GRAU; }
   doc.setFontSize(10);
   doc.setFont('helvetica','normal'); doc.setTextColor(40);
-  doc.text('Geprüft '+s.done+' / '+s.tot+'   ·   OK '+s.ok+'   ·   NOK '+s.nok+'   ·   offen '+s.open, ML, y+1.5);
+  var soDonePdf = (s.noks||[]).filter(function(n){return n.so;}).length;
+  doc.text('Geprüft '+s.done+' / '+s.tot+'   ·   OK '+s.ok+'   ·   NOK '+s.nok+(soDonePdf>0?(' ('+soDonePdf+' behoben)'):'')+'   ·   offen '+s.open, ML, y+1.5);
   doc.setFont('helvetica','bold'); doc.setTextColor(statusCol[0],statusCol[1],statusCol[2]);
   doc.text(statusTxt, ML, y+7.5);
   doc.setTextColor(20); y += 13;
@@ -1827,6 +1828,7 @@ function buildPDF(){
     doc.setTextColor(20); doc.text(lines, x1+2, y+4.4);
     doc.setTextColor(60); doc.text(it[2], x2+2, y+4.4);
     if(st && st.s==='ok'){ doc.setTextColor(GRUEN[0],GRUEN[1],GRUEN[2]); doc.setFont('helvetica','bold'); doc.text('OK', x3+2, y+4.4); }
+    else if(st && st.s==='nok' && st.so){ doc.setTextColor(AMBER[0],AMBER[1],AMBER[2]); doc.setFont('helvetica','bold'); doc.text('behoben', x3+2, y+4.4); }
     else if(st && st.s==='nok'){ doc.setTextColor(ROT[0],ROT[1],ROT[2]); doc.setFont('helvetica','bold'); doc.text('NOK', x3+2, y+4.4); }
     else { doc.setTextColor(GRAU[0],GRAU[1],GRAU[2]); doc.text('offen', x3+2, y+4.4); }
     doc.setTextColor(20); doc.setFont('helvetica','normal');
