@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.55</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.57</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -400,7 +400,7 @@
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.55</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.57</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -1716,7 +1716,7 @@ function shareFotos(){
   });
   if(files.length===0){ uiAlert('Keine Fotos vorhanden.'); return; }
   if(navigator.canShare && navigator.canShare({files:files}) && navigator.share){
-    navigator.share({files:files, title:'Mangelfotos Abnahmeprotokoll'}).catch(function(){});
+    navigator.share({files:files}).catch(function(){});
   } else {
     uiAlert('Direktes Teilen wird hier nicht unterstützt.\nAlternative: Foto antippen und im Vollbild gedrückt halten → „Zu Fotos hinzufügen".');
   }
@@ -1733,7 +1733,7 @@ function shareOrDownload(blob, fname, mime){
     var file;
     try{ file = new File([blob], fname, {type:mime}); }catch(e){ file = null; }
     if(file && canShareFiles(file)){
-      navigator.share({files:[file], title:fname}).then(function(){ res(true); }, function(){ res(false); });
+      navigator.share({files:[file]}).then(function(){ res(true); }, function(){ res(false); });
       return;
     }
     // Kein File-Sharing (z. B. Quick Look): Download versuchen, aber ehrlich melden dass es evtl. wirkungslos ist
@@ -1907,7 +1907,7 @@ function buildPDF(){
   var file;
   try{ file = new File([blob], fname, {type:'application/pdf'}); }catch(e){ file = null; }
   if(file && canShareFiles(file)){
-    navigator.share({files:[file], title:fname}).catch(function(){});
+    navigator.share({files:[file]}).catch(function(){});
     return;
   }
   // Download versuchen; falls wirkungslos (Quick Look), ehrlich hinweisen
@@ -1935,7 +1935,7 @@ function exportBackup(){
   var file;
   try{ file = new File([blob], fname, {type:'application/json'}); }catch(e){ file = null; }
   if(file && canShareFiles(file)){
-    return navigator.share({files:[file], title:fname})
+    return navigator.share({files:[file]})
       .then(function(){ return 'shared'; }, function(){ return 'cancelled'; });
   }
   // Teilen/Download nicht möglich (Quick Look / eingebettet): vollständige Sicherung als kopierbarer Text
@@ -2328,9 +2328,18 @@ if($('#home-import')) $('#home-import').addEventListener('click', function(){ va
 if($('#imp')) $('#imp').addEventListener('change', function(){ if(this.files && this.files[0]) importAsNewProtocol(this.files[0]); });
 
 /* ============ Boot ============ */
+/* Persistenten Speicher anfordern (gegen automatisches Auslagern) — einmal beim Start */
+function requestPersist(){
+  try{
+    if(navigator.storage && navigator.storage.persist){
+      navigator.storage.persisted().then(function(ok){ if(!ok) navigator.storage.persist(); }).catch(function(){});
+    }
+  }catch(e){}
+}
 function boot(){
   initTheme();
   initStickyHead();
+  requestPersist();
   fotoOpen().then(migrateOrphanFotos).then(function(){
     buildChecklist(); bindMeta(); renderEval(); updateStorageWarn();
     showHome();
