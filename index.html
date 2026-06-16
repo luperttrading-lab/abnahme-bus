@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Abnahme Bus">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
-<title>Abnahmeprotokoll Neufahrzeug v4.59</title>
+<title>Abnahmeprotokoll Neufahrzeug v4.61</title>
 <style>
   :root{
     /* Dunkles Theme (Standard-Fallback) */
@@ -400,7 +400,7 @@
   <button id="save-btn" aria-label="Protokoll sichern"><svg viewBox="0 0 24 24"><path d="M2,2 H18 L22,6 V22 H2 Z"/><path d="M8,2 V8 H16 V2"/><rect x="6" y="13" width="12" height="9" rx="1"/></svg></button>
   <button id="del-btn" aria-label="Protokoll löschen"><svg viewBox="0 0 24 24"><path d="M3,5 H21"/><path d="M8,5 V2 H16 V5"/><path d="M5,5 L6.5,22 H17.5 L19,5"/><path d="M9.5,9 V18 M14.5,9 V18"/></svg></button>
   <button id="theme-toggle" aria-label="Hell/Dunkel umschalten"></button>
-  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.59</span></h1>
+  <h1>Abnahmeprotokoll Neufahrzeug <span id="ver" style="color:var(--faint);font-size:12px;font-weight:600">v4.61</span></h1>
   <div class="sub"><span id="tb-left">0 / 61 geprüft</span><span id="tb-right"></span></div>
   <div id="pbar"><div style="background:var(--ok)"></div><div style="background:var(--nok)"></div></div>
   <div id="storage-warn"></div>
@@ -1347,7 +1347,8 @@ $('#pg-check').addEventListener('click', function(ev){
       buildChecklist();
       return;
     }
-    state.items[code]={s:sNew, b:(cur&&cur.b)||'', so:(cur&&cur.so)||false, d:(cur&&cur.d)||'', col:false};
+    var keepN=(sNew==='nok');
+    state.items[code]={s:sNew, b:keepN&&cur?(cur.b||''):'', so:keepN&&cur?(!!cur.so):false, d:keepN&&cur?(cur.d||''):'', col:false};
     if(sNew==='nok' && !state.items[code].d) state.items[code].d = state.meta.datum || new Date().toISOString().slice(0,10);
     persist();
     if(state.filter!=='alle'){ buildChecklist(); }
@@ -1645,11 +1646,15 @@ function renderEval(){
      + (s.nok>0?(' Bisher '+s.nok+' NOK erfasst'+(soDone>0?(', davon '+soDone+' sofort behoben'):'')+'.'):'')+'</div>';
   } else if(s.nok>0){
     var rest=s.nok-soDone;
-    h+='<div class="verdict v-nok"><b>Übernahme mit Beanstandungen — '+s.nok+' × NOK</b>'
-     + (soDone>0?(soDone+' Beanstandung'+(soDone>1?'en':'')+' sofort behoben, '):'')
-     + (rest>0?(rest+' offen zur Nachbesserung — Beanstandungsliste unterschreiben lassen und Frist vereinbaren.'):'alle Beanstandungen sofort behoben.')+'</div>';
+    if(rest>0){
+      h+='<div class="verdict v-nok"><b>Übernahme mit offenen Beanstandungen — '+rest+' × NOK</b>'
+       + (soDone>0?('Zusätzlich '+soDone+' sofort behoben. '):'')
+       + 'Beanstandungsliste unterschreiben lassen und Frist vereinbaren.</div>';
+    } else {
+      h+='<div class="verdict v-ok"><b>Übernahme — alle Mängel sofort behoben</b>'+soDone+' Beanstandung'+(soDone>1?'en':'')+' direkt erledigt, keine offenen Punkte. Datum, KM-Stand und Prüfnachweise eintragen, dann unterschreiben.</div>';
+    }
   } else {
-    h+='<div class="verdict v-ok"><b>Übernahme ohne Beanstandungen</b>Alle '+s.tot+' Punkte OK. Datum, KM-Stand, Feuerlöscher- und Tachoprüfung eintragen, dann unterschreiben.</div>';
+    h+='<div class="verdict v-ok"><b>Übernahme ohne Beanstandungen</b>Keine Beanstandungen erfasst. Datum, KM-Stand und Prüfnachweise eintragen, dann unterschreiben.</div>';
   }
 
   h+='<div class="fsline">'
@@ -1788,8 +1793,10 @@ function buildPDF(){
 
   /* Ergebnis */
   var statusTxt, statusCol;
+  var soP=(s.noks||[]).filter(function(n){return n.so;}).length, restP=s.nok-soP;
   if(s.open>0){ statusTxt='PRÜFUNG UNVOLLSTÄNDIG — '+s.open+' Punkte offen'; statusCol=[176,124,30]; }
-  else if(s.nok>0){ statusTxt='ÜBERNAHME MIT BEANSTANDUNGEN'; statusCol=ROT; }
+  else if(restP>0){ statusTxt='ÜBERNAHME MIT BEANSTANDUNGEN'; statusCol=ROT; }
+  else if(s.nok>0){ statusTxt='ÜBERNAHME – ALLE MÄNGEL SOFORT BEHOBEN'; statusCol=GRUEN; }
   else if(s.done>0){ statusTxt='ÜBERNAHME OHNE BEANSTANDUNGEN'; statusCol=GRUEN; }
   else { statusTxt='NOCH KEINE PRÜFUNG ERFASST'; statusCol=GRAU; }
   doc.setFontSize(10);
